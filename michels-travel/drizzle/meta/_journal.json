@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1766449046128,
+      "tag": "0000_long_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1766449267811,
+      "tag": "0001_blushing_dark_phoenix",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1766452428198,
+      "tag": "0002_cynical_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1766453899715,
+      "tag": "0003_first_galactus",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1766454427284,
+      "tag": "0004_cooing_the_renegades",
+      "breakpoints": true
+    }
+  ]
+}
