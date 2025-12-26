@@ -1,0 +1,59 @@
+/* Login Styles */
+.login-container {
+    margin-top: 100px;
+    margin-bottom: 50px;
+}
+
+.login-card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 10px;
+}
+
+.login-card .card-body {
+    padding: 40px;
+}
+
+.login-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+}
+
+.btn-outline-secondary:focus {
+    box-shadow: none;
+}
+
+/* Register Styles */
+.register-container {
+    margin-top: 100px;
+    margin-bottom: 50px;
+}
+
+.register-card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 10px;
+}
+
+.register-card .card-body {
+    padding: 40px;
+}
+
+.register-card h2 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+}
+
+.form-check a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.form-check a:hover {
+    text-decoration: underline;
+}

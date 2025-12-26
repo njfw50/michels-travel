@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Results - Michel's Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .flight-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .flight-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .airline-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .price-tag {
+            font-size: 24px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .flight-details {
+            padding: 15px;
+        }
+
+        .flight-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #ddd;
+            z-index: 1;
+        }
+
+        .flight-point {
+            position: relative;
+            z-index: 2;
+            background-color: white;
+        }
+
+        .loading-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Michel's Travel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Alternar navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Buscar</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/results.html">Resultados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/checkout.html">Checkout</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item auth-link"><a class="nav-link" href="/register.html">Entrar/Cadastrar</a></li>
+                    <li class="nav-item dropdown user-menu" style="display:none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Minha conta</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Minhas reservas</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutLink">Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5">
+        <!-- Loading Spinner -->
+        <div class="loading-spinner d-none">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filters -->
+            <div class="col-md-3">
+                <div class="filter-section">
+                    <h5>Filters</h5>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Price Range</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" class="form-control" id="minPrice" placeholder="Min">
+                            <input type="number" class="form-control" id="maxPrice" placeholder="Max">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stops</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="nonstop">
+                            <label class="form-check-label" for="nonstop">
+                                Non-stop only
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Airlines</label>
+                        <div id="airlinesFilter">
+                            <!-- Airlines will be added dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="col-md-9">
+                <div id="searchSummary" class="alert alert-info">
+                    <!-- Search summary will be inserted here -->
+                </div>
+                <div id="sortingOptions" class="mb-3">
+                    <select class="form-select">
+                        <option value="price">Sort by Price</option>
+                        <option value="duration">Sort by Duration</option>
+                        <option value="departure">Sort by Departure Time</option>
+                    </select>
+                </div>
+                <div id="flightResults">
+                    <!-- Flight results will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flight Card Template -->
+    <template id="flightCardTemplate">
+        <div class="flight-card">
+            <div class="flight-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img class="airline-logo me-3" src="" alt="Airline Logo">
+                    <div>
+                        <h5 class="airline-name mb-0"></h5>
+                        <small class="flight-number text-muted"></small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="price-tag"></div>
+                    <button class="btn btn-primary btn-sm">Select</button>
+                </div>
+            </div>
+            <div class="flight-details">
+                <div class="flight-timeline">
+                    <div class="timeline-line"></div>
+                    <div class="row">
+                        <div class="col-4 flight-point">
+                            <div class="departure-time fw-bold"></div>
+                            <div class="departure-airport"></div>
+                        </div>
+                        <div class="col-4 text-center flight-point">
+                            <div class="duration small text-muted"></div>
+                            <div class="stops small"></div>
+                        </div>
+                        <div class="col-4 text-end flight-point">
+                            <div class="arrival-time fw-bold"></div>
+                            <div class="arrival-airport"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/results.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Voos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Michel's Travel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Alternar navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="/">Buscar</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/results.html">Resultados</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/checkout.html">Checkout</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item auth-link"><a class="nav-link" href="/register.html">Entrar/Cadastrar</a></li>
+                    <li class="nav-item dropdown user-menu" style="display:none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Minha conta</a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Minhas reservas</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutLink">Sair</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-container">
+        <div class="search-container">
+            <h1 class="text-center mb-4">Encontre seu próximo voo</h1>
+            <div class="card">
+                <div class="card-body">
+                    <form id="flightSearchForm">
+                        <div class="row g-3">
+                            <!-- Tipo de viagem -->
+                            <div class="col-12">
+                                <label class="form-label d-block">Tipo de viagem</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="itineraryType" id="tripOneWay" value="ONE_WAY" checked>
+                                        <label class="form-check-label" for="tripOneWay">Somente ida</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="itineraryType" id="tripRoundTrip" value="ROUND_TRIP">
+                                        <label class="form-check-label" for="tripRoundTrip">Ida e volta</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="itineraryType" id="tripMultiCity" value="MULTI_CITY">
+                                        <label class="form-check-label" for="tripMultiCity">Várias cidades</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ONE_WAY / ROUND_TRIP campos -->
+                            <div id="simpleTripFields" class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="origin">Origem</label>
+                                    <input type="text" class="form-control" id="origin" placeholder="Ex.: EWR" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="destination">Destino</label>
+                                    <input type="text" class="form-control" id="destination" placeholder="Ex.: MCO" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="departureDate">Data de ida</label>
+                                    <input type="date" class="form-control" id="departureDate" required>
+                                </div>
+                                <div class="col-md-6 d-none" id="returnDateWrapper">
+                                    <label for="returnDate">Data de volta</label>
+                                    <input type="date" class="form-control" id="returnDate">
+                                </div>
+                            </div>
+
+                            <!-- MULTI_CITY campos -->
+                            <div id="multiCityFields" class="d-none">
+                                <div id="segmentsContainer" class="d-flex flex-column gap-3"></div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="addSegmentBtn">Adicionar trecho</button>
+                            </div>
+
+                            <!-- Passageiros por faixa etária -->
+                            <div class="col-12">
+                                <label class="form-label d-block">Passageiros</label>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-4">
+                                        <label for="infants02" class="form-label">Bebês (0–2)</label>
+                                        <input type="number" class="form-control" id="infants02" min="0" value="0">
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <label for="children211" class="form-label">Crianças (2–11)</label>
+                                        <input type="number" class="form-control" id="children211" min="0" value="0">
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <label for="adults11p" class="form-label">Adultos (11+)</label>
+                                        <input type="number" class="form-control" id="adults11p" min="1" value="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Classe de tarifa -->
+                            <div class="col-12 col-md-6">
+                                <label for="fareClass" class="form-label">Classe de tarifa</label>
+                                <select id="fareClass" class="form-select">
+                                    <option value="ECONOMY" selected>Econômica</option>
+                                    <option value="PREMIUM_ECONOMY">Econômica Premium</option>
+                                    <option value="BUSINESS">Executiva</option>
+                                    <option value="FIRST">Primeira Classe</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100">Buscar voos</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="flightResults" class="mt-4"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
