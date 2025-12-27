@@ -19,11 +19,12 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!isUnauthorized) return;
 
   const loginUrl = getLoginUrl();
-  // Only redirect if OAuth is properly configured
+  // Only redirect if OAuth is properly configured, otherwise redirect to /login
   if (!loginUrl.startsWith("#oauth")) {
     window.location.href = loginUrl;
   } else {
-    console.warn("[Auth] OAuth not configured, cannot redirect to login");
+    // OAuth not configured - redirect to email/password login page
+    window.location.href = "/login";
   }
 };
 

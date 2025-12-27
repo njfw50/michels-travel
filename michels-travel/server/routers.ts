@@ -1,9 +1,12 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { hashPassword, verifyPassword } from "./_core/password";
+import { getUserByEmail, upsertUser } from "./db";
+import { sdk } from "./_core/sdk";
 import { searchFlights, searchLocations as searchAmadeusLocations, getAirlineName, formatDuration, FlightSearchParams } from "./amadeus";
 import { searchLocalAirports, getAirportByCode } from "./airports";
 import { getDb } from "./db";
@@ -66,6 +69,153 @@ export const appRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
         return { success: true } as const;
+      }),
+    // Register with email/password
+    register: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2, "Name must be at least 2 characters"),
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(6, "Password must be at least 6 characters"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available. Please configure DATABASE_URL in .env file and run 'pnpm db:init'",
+          });
+        }
+
+        // Check if user already exists
+        const existingUser = await getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "User with this email already exists",
+          });
+        }
+
+        // Hash password
+        const passwordHash = await hashPassword(input.password);
+
+        // Generate openId for email/password users (using email as base)
+        const openId = `email:${input.email}`;
+
+        // Create user
+        await upsertUser({
+          openId,
+          name: input.name,
+          email: input.email,
+          passwordHash,
+          loginMethod: "email",
+          lastSignedIn: new Date(),
+        });
+
+        // Get the created user
+        const user = await getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create user",
+          });
+        }
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: input.name,
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      }),
+    // Login with email/password
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(1, "Password is required"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database not available. Please configure DATABASE_URL in .env file and run 'pnpm db:init'",
+          });
+        }
+
+        // Get user by email
+        const user = await getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid email or password",
+          });
+        }
+
+        // Check if user has password (email/password auth)
+        if (!user.passwordHash) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "This account uses OAuth login. Please use the OAuth login option.",
+          });
+        }
+
+        // Verify password
+        const isValid = await verifyPassword(input.password, user.passwordHash);
+        if (!isValid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid email or password",
+          });
+        }
+
+        // Update last signed in
+        await upsertUser({
+          openId: user.openId,
+          lastSignedIn: new Date(),
+        });
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || "",
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
       }),
   }),
 

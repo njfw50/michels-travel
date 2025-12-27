@@ -51,35 +51,24 @@ function UserMenu() {
     const isOAuthConfigured = !loginUrl.startsWith("#oauth");
     
     const handleLoginClick = (e: React.MouseEvent) => {
+      e.preventDefault();
       if (!isOAuthConfigured) {
-        e.preventDefault();
-        toast.error(
-          "OAuth não está configurado. Por favor, configure VITE_OAUTH_PORTAL_URL e VITE_APP_ID no arquivo .env",
-          { duration: 5000 }
-        );
+        // Navigate to login page instead of showing error
+        navigate("/login");
         return;
       }
-      // Let the default link behavior handle navigation
+      // Navigate to OAuth login
+      window.location.href = loginUrl;
     };
 
     return (
       <Button 
         variant="outline" 
         size="sm"
-        onClick={isOAuthConfigured ? undefined : handleLoginClick}
-        asChild={isOAuthConfigured}
+        onClick={handleLoginClick}
       >
-        {isOAuthConfigured ? (
-          <a href={loginUrl}>
-            <User className="h-4 w-4 mr-2" />
-            {t("nav.login")}
-          </a>
-        ) : (
-          <>
-            <User className="h-4 w-4 mr-2" />
-            {t("nav.login")}
-          </>
-        )}
+        <User className="h-4 w-4 mr-2" />
+        {t("nav.login")}
       </Button>
     );
   }
@@ -102,8 +91,8 @@ interface Flight {
   baggage?: any;
   validatingAirline: string;
   validatingAirlineCode: string;
-  seatsAvailable?: number;
-  lastTicketingDate?: string;
+  seatsAvailable: number; // Required for FlightCard component
+  lastTicketingDate: string; // Required for FlightCard component
 }
 
 export default function Home() {
@@ -202,7 +191,12 @@ export default function Home() {
   };
 
   const filteredFlights = searchQuery.data?.flights
-    ?.filter((flight) => {
+    ?.map((flight) => ({
+      ...flight,
+      seatsAvailable: flight.seatsAvailable ?? 10, // Default to 10 if undefined
+      lastTicketingDate: flight.lastTicketingDate ?? new Date().toISOString(), // Default to current date if undefined
+    }))
+    .filter((flight) => {
       if (filters.stops.length > 0) {
         const stops = flight.outbound.stops;
         const matchesStops = filters.stops.some((s) =>
@@ -221,7 +215,7 @@ export default function Home() {
         return parseFloat(a.price.total) - parseFloat(b.price.total);
       }
       return parseFloat(a.price.total) - parseFloat(b.price.total);
-    });
+    }) as Flight[] | undefined;
 
   const availableAirlines = searchQuery.data?.flights
     ? Array.from(new Map(

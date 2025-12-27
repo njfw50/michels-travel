@@ -73,10 +73,8 @@ export default function DashboardLayout({
             onClick={() => {
               const loginUrl = getLoginUrl();
               if (loginUrl.startsWith("#oauth")) {
-                toast.error(
-                  "OAuth não está configurado. Por favor, configure VITE_OAUTH_PORTAL_URL e VITE_APP_ID no arquivo .env",
-                  { duration: 5000 }
-                );
+                // OAuth not configured - redirect to email/password login page
+                window.location.href = "/login";
                 return;
               }
               window.location.href = loginUrl;

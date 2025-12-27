@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
+import { Link } from "wouter";
 import {
   Bell,
   Plus,
@@ -180,7 +180,7 @@ export default function PriceAlerts() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <a href={getLoginUrl()}>{t.login}</a>
+              <Link href="/login">{t.login}</Link>
             </Button>
           </CardContent>
         </Card>

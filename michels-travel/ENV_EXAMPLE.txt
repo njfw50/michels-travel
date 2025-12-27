@@ -1,0 +1,49 @@
+# ============================================
+# Configuração OAuth - Michel's Travel
+# ============================================
+# 
+# INSTRUÇÕES:
+# 1. Copie este conteúdo para um arquivo chamado .env na raiz de michels-travel/
+# 2. Preencha os valores abaixo com suas credenciais do Manus
+# 3. Reinicie o servidor após configurar
+#
+# ============================================
+
+# OAuth Configuration (Manus) - Frontend
+# URL do portal OAuth do Manus
+# Obtenha em: Portal Manus > Configurações da Aplicação
+VITE_OAUTH_PORTAL_URL=https://portal.manus.computer
+
+# App ID da aplicação no Manus
+# Obtenha em: Portal Manus > Configurações da Aplicação
+VITE_APP_ID=seu-app-id-aqui
+
+# OAuth Configuration (Manus) - Backend
+# URL do servidor OAuth (geralmente igual ao portal)
+OAUTH_SERVER_URL=https://oauth.manus.computer
+
+# JWT Secret - Chave secreta para assinar tokens
+# Gere uma string aleatória segura (mínimo 32 caracteres)
+JWT_SECRET=seu-jwt-secret-aqui-gerar-uma-string-aleatoria-segura
+
+# Database Configuration
+# URL de conexão MySQL
+# Formato: mysql://usuario:senha@host:porta/nome_do_banco
+DATABASE_URL=mysql://root:senha@localhost:3306/michels_travel
+
+# ============================================
+# Configurações Opcionais
+# ============================================
+
+# Owner OpenID (opcional - para dar permissões de admin)
+# OWNER_OPEN_ID=seu-open-id-aqui
+
+# Forge API (opcional - para funcionalidades de IA)
+# BUILT_IN_FORGE_API_URL=https://forge.manus.im
+# BUILT_IN_FORGE_API_KEY=sua-api-key-aqui
+
+# Stripe (opcional - para pagamentos)
+# STRIPE_SECRET_KEY=sk_test_...
+# VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+# STRIPE_WEBHOOK_SECRET=whsec_...
+

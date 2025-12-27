@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Plane, Calendar, Users, ArrowLeft, Loader2, Search, CheckCircle, Clock, XCircle, RefreshCw } from "lucide-react";
-import { getLoginUrl } from "@/const";
+import { Link } from "wouter";
 
 const translations = {
   en: {
@@ -133,7 +133,7 @@ export default function MyBookings() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <Button asChild className="w-full">
-              <a href={getLoginUrl()}>{t.login}</a>
+              <Link href="/login">{t.login}</Link>
             </Button>
             <Button variant="outline" onClick={() => navigate("/")}>
               <ArrowLeft className="h-4 w-4 mr-2" />

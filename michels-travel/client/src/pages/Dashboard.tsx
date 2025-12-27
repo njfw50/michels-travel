@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
+import { Link } from "wouter";
 import {
   Plane,
   User,
@@ -206,7 +206,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <a href={getLoginUrl()}>{t.login}</a>
+              <Link href="/login">{t.login}</Link>
             </Button>
           </CardContent>
         </Card>

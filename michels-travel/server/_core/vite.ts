@@ -3,24 +3,53 @@ import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Also get import.meta.dirname for compatibility
+const getImportMetaDirname = () => {
+  try {
+    return import.meta.dirname || path.dirname(__filename);
+  } catch {
+    return path.dirname(__filename);
+  }
+};
+
 export async function setupVite(app: Express, server: Server) {
+  console.log("[Vite] Setting up Vite dev server...");
+  console.log("[Vite] NODE_ENV:", process.env.NODE_ENV);
+  console.log("[Vite] __dirname:", __dirname);
+  console.log("[Vite] import.meta.dirname:", import.meta.dirname);
+  console.log("[Vite] process.cwd():", process.cwd());
+  
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
     allowedHosts: true as const,
   };
 
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    server: serverOptions,
-    appType: "custom",
-  });
+  let vite: Awaited<ReturnType<typeof createViteServer>>;
+  try {
+    vite = await createViteServer({
+      ...viteConfig,
+      configFile: false,
+      server: serverOptions,
+      appType: "custom",
+    });
 
-  app.use(vite.middlewares);
+    console.log("[Vite] Vite server created successfully");
+    app.use(vite.middlewares);
+    console.log("[Vite] Vite middlewares registered");
+  } catch (error) {
+    console.error("[Vite] Failed to create Vite server:", error);
+    throw error;
+  }
+  
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
@@ -33,14 +62,18 @@ export async function setupVite(app: Express, server: Server) {
       // Resolve path relative to the michels-travel directory
       // Try multiple strategies to find client/index.html
       const possiblePaths = [
-        // Strategy 1: Relative to server/_core (normal case)
+        // Strategy 1: Relative to server/_core using __dirname (most reliable)
+        path.resolve(__dirname, "../..", "client", "index.html"),
+        // Strategy 2: Relative to server/_core using import.meta.dirname
         path.resolve(import.meta.dirname, "../..", "client", "index.html"),
-        // Strategy 2: From current working directory
+        // Strategy 3: From current working directory
         path.resolve(process.cwd(), "client", "index.html"),
-        // Strategy 3: From CWD + michels-travel (if run from parent directory)
+        // Strategy 4: From CWD + michels-travel (if run from parent directory)
         path.resolve(process.cwd(), "michels-travel", "client", "index.html"),
-        // Strategy 4: Direct relative path
+        // Strategy 5: Direct relative path
         path.resolve(import.meta.dirname, "../../client/index.html"),
+        // Strategy 6: Using __dirname with normalized path
+        path.resolve(__dirname, "..", "..", "client", "index.html"),
       ];
       
       let clientTemplate: string | null = null;
@@ -56,14 +89,21 @@ export async function setupVite(app: Express, server: Server) {
         }
       }
       
-      // Debug: log the paths being used (only in development)
+      // Debug: log the paths being used (always in development for troubleshooting)
       if (process.env.NODE_ENV === "development") {
+        console.log(`[Vite] __dirname: ${__dirname}`);
         console.log(`[Vite] import.meta.dirname: ${import.meta.dirname}`);
         console.log(`[Vite] CWD: ${process.cwd()}`);
-        console.log(`[Vite] Tried paths:`, possiblePaths);
+        console.log(`[Vite] Tried ${possiblePaths.length} paths:`);
+        possiblePaths.forEach((p, i) => {
+          const exists = fs.existsSync(p);
+          console.log(`  ${i + 1}. ${exists ? '✅' : '❌'} ${p}`);
+        });
         if (clientTemplate) {
           console.log(`[Vite] ✅ Found index.html at: ${clientTemplate}`);
           console.log(`[Vite] Project root: ${projectRoot}`);
+        } else {
+          console.error(`[Vite] ❌ index.html not found in any of the tried paths!`);
         }
       }
       

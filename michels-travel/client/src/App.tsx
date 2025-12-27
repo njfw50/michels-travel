@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import Checkout from "./pages/Checkout";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingPending from "./pages/BookingPending";
@@ -18,6 +19,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/login"} component={Login} />
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/booking/success"} component={BookingSuccess} />
       <Route path={"/booking/pending"} component={BookingPending} />

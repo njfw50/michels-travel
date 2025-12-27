@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Plane, Users, Calendar, CreditCard, ArrowLeft, Loader2, Shield, CheckCircle } from "lucide-react";
-import { getLoginUrl } from "@/const";
 
 interface PassengerInfo {
   type: "adult" | "child" | "infant";
@@ -232,7 +231,7 @@ export default function Checkout() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <Button asChild className="w-full">
-              <a href={getLoginUrl()}>{t.login}</a>
+              <Link href="/login">{t.login}</Link>
             </Button>
             <Button variant="outline" onClick={() => navigate("/")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
