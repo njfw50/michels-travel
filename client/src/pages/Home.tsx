@@ -191,7 +191,14 @@ export default function Home() {
               </a>
             </div>
 
-            <LanguageSelector />
+            <div className="flex items-center gap-4">
+              <Link href="/login">
+                <Button variant="outline" size="sm">
+                  {t("nav.login") || "Login"}
+                </Button>
+              </Link>
+              <LanguageSelector />
+            </div>
           </div>
         </div>
       </nav>

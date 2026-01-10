@@ -1,7 +1,13 @@
 import "dotenv/config";
+// Set NODE_ENV to development if not already set (for Windows compatibility)
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = "development";
+}
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -45,7 +51,14 @@ async function startServer() {
   );
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    try {
+      await setupVite(app, server);
+      console.log("[Server] Vite dev server configured successfully");
+    } catch (error) {
+      console.error("[Server] Failed to setup Vite:", error);
+      console.error("[Server] Falling back to serveStatic (this should not happen in development)");
+      serveStatic(app);
+    }
   } else {
     // In production, try to find the built files
     // First try: relative to this server (Project/dist/public)

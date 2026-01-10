@@ -17,10 +17,8 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    <!-- Analytics: Loaded via TypeScript in main.tsx to prevent console errors -->
+    <!-- DOGMA 9: Console errors must be prevented - analytics must be conditional and safe -->
   </body>
 
 </html>

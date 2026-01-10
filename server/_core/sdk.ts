@@ -155,7 +155,34 @@ class SDKServer {
   }
 
   private getSessionSecret() {
-    const secret = ENV.cookieSecret;
+    // DOGMA 2: No silent failures - validate JWT_SECRET
+    // DOGMA 10: Auto-initialization - use default if not configured in development
+    let secret = ENV.cookieSecret;
+    
+    if (!secret || secret.trim() === "") {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error(
+          "JWT_SECRET is required in production. " +
+          "Please configure JWT_SECRET in your .env file with at least 32 characters."
+        );
+      } else {
+        // DOGMA 10: Use default secret in development
+        secret = "dev-secret-key-change-in-production-min-32-chars";
+        console.warn(
+          "[Auth] ⚠️ JWT_SECRET not configured, using default development secret. " +
+          "Set JWT_SECRET in .env for production."
+        );
+      }
+    }
+    
+    // Validate minimum length (jose requires at least 32 bytes for HS256)
+    if (secret.length < 32) {
+      throw new Error(
+        `JWT_SECRET must be at least 32 characters long. Current length: ${secret.length}. ` +
+        "Please update your .env file with a longer JWT_SECRET."
+      );
+    }
+    
     return new TextEncoder().encode(secret);
   }
 
@@ -168,10 +195,30 @@ class SDKServer {
     openId: string,
     options: { expiresInMs?: number; name?: string } = {}
   ): Promise<string> {
+    // DOGMA 2: No silent failures - validate inputs
+    if (!openId || openId.trim() === "") {
+      throw new Error("openId is required to create session token");
+    }
+    
+    // DOGMA 10: Use default appId in development if not configured
+    let appId = ENV.appId;
+    if (!appId || appId.trim() === "") {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error("VITE_APP_ID is required in production. Configure it in your .env file.");
+      } else {
+        // Use default in development
+        appId = "dev-app-id";
+        console.warn(
+          "[Auth] ⚠️ VITE_APP_ID not configured, using default development appId. " +
+          "Set VITE_APP_ID in .env for production."
+        );
+      }
+    }
+    
     return this.signSession(
       {
         openId,
-        appId: ENV.appId,
+        appId,
         name: options.name || "",
       },
       options
@@ -212,19 +259,24 @@ class SDKServer {
       });
       const { openId, appId, name } = payload as Record<string, unknown>;
 
-      if (
-        !isNonEmptyString(openId) ||
-        !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
-      ) {
-        console.warn("[Auth] Session payload missing required fields");
+      // DOGMA 2: Explicit validation - name can be empty but openId and appId cannot
+      if (!isNonEmptyString(openId)) {
+        console.warn("[Auth] Session payload missing openId");
         return null;
       }
+      
+      if (!isNonEmptyString(appId)) {
+        console.warn("[Auth] Session payload missing appId");
+        return null;
+      }
+      
+      // Name is optional (can be empty string)
+      const verifiedName = typeof name === "string" ? name : "";
 
       return {
         openId,
         appId,
-        name,
+        name: verifiedName,
       };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
@@ -260,6 +312,12 @@ class SDKServer {
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
+    
+    // DOGMA 2: Explicit debugging - log cookie status in development
+    if (process.env.NODE_ENV === 'development' && !sessionCookie) {
+      console.debug(`[Auth] No session cookie found. Cookie header: ${req.headers.cookie ? 'present' : 'missing'}`);
+    }
+    
     const session = await this.verifySession(sessionCookie);
 
     if (!session) {

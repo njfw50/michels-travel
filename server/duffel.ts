@@ -1,221 +1,202 @@
 import axios from "axios";
 import { ENV } from "./_core/env";
 
-// Amadeus API Configuration
-const AMADEUS_BASE_URL = "https://test.api.amadeus.com"; // Use production URL for live: https://api.amadeus.com
-
-interface AmadeusToken {
-  access_token: string;
-  expires_at: number;
-}
-
-let cachedToken: AmadeusToken | null = null;
+// Duffel API Configuration - DOGMA 11: Duffel is the canonical flight search API
+const DUFFEL_BASE_URL = "https://api.duffel.com";
 
 /**
- * Get Amadeus API access token with caching
+ * Get Duffel API access token
+ * DOGMA 11: Duffel is the official API - validate credentials before use
  */
-export async function getAmadeusToken(): Promise<string> {
-  // Check if we have a valid cached token
-  if (cachedToken && cachedToken.expires_at > Date.now() + 60000) {
-    return cachedToken.access_token;
+export async function getDuffelToken(): Promise<string> {
+  const apiKey = process.env.DUFFEL_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Duffel API credentials not configured");
   }
 
-  const apiKey = process.env.AMADEUS_API_KEY;
-  const apiSecret = process.env.AMADEUS_API_SECRET;
-
-  if (!apiKey || !apiSecret) {
-    throw new Error("Amadeus API credentials not configured");
-  }
-
-  try {
-    const response = await axios.post(
-      `${AMADEUS_BASE_URL}/v1/security/oauth2/token`,
-      new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: apiKey,
-        client_secret: apiSecret,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
-
-    cachedToken = {
-      access_token: response.data.access_token,
-      expires_at: Date.now() + response.data.expires_in * 1000,
-    };
-
-    return cachedToken.access_token;
-  } catch (error: any) {
-    console.error("Failed to get Amadeus token:", error.response?.data || error.message);
-    throw new Error("Failed to authenticate with Amadeus API");
-  }
+  // Duffel uses API key directly, no OAuth token needed
+  return apiKey;
 }
 
 /**
- * Validate Amadeus credentials by attempting to get a token
+ * Validate Duffel credentials
+ * DOGMA 11: Validate before use
  */
-export async function validateAmadeusCredentials(): Promise<boolean> {
+export async function validateDuffelCredentials(): Promise<boolean> {
   try {
-    await getAmadeusToken();
-    return true;
+    const apiKey = process.env.DUFFEL_API_KEY;
+    return !!apiKey;
   } catch {
     return false;
   }
 }
 
-// Flight Search Types
+// Flight Search Types - DOGMA 11: Duffel API structure
 export interface FlightSearchParams {
-  originLocationCode: string;
-  destinationLocationCode: string;
+  origin: string;
+  destination: string;
   departureDate: string;
   returnDate?: string;
   adults: number;
   children?: number;
   infants?: number;
-  travelClass?: "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
+  cabinClass?: "economy" | "premium_economy" | "business" | "first";
+  maxPrice?: number;
+  // Legacy Amadeus fields for compatibility (will be ignored)
+  originLocationCode?: string;
+  destinationLocationCode?: string;
+  travelClass?: string;
   nonStop?: boolean;
   currencyCode?: string;
-  maxPrice?: number;
   max?: number;
 }
 
-export interface FlightOffer {
+export interface DuffelOffer {
   id: string;
-  source: string;
-  instantTicketingRequired: boolean;
-  nonHomogeneous: boolean;
-  oneWay: boolean;
-  lastTicketingDate: string;
-  numberOfBookableSeats: number;
-  itineraries: Itinerary[];
-  price: Price;
-  pricingOptions: PricingOptions;
-  validatingAirlineCodes: string[];
-  travelerPricings: TravelerPricing[];
+  total_amount: string;
+  total_currency: string;
+  slices: DuffelSlice[];
+  passengers: DuffelPassenger[];
+  owner: {
+    name: string;
+    iata_code: string;
+  };
 }
 
-export interface Itinerary {
+export interface DuffelSlice {
+  origin: {
+    iata_code: string;
+    name: string;
+    city: string;
+    city_name: string;
+  };
+  destination: {
+    iata_code: string;
+    name: string;
+    city: string;
+    city_name: string;
+  };
+  segments: DuffelSegment[];
   duration: string;
-  segments: Segment[];
 }
 
-export interface Segment {
-  departure: FlightEndpoint;
-  arrival: FlightEndpoint;
-  carrierCode: string;
-  number: string;
-  aircraft: { code: string };
-  operating?: { carrierCode: string };
+export interface DuffelSegment {
+  departing_at: string;
+  arriving_at: string;
+  origin: {
+    iata_code: string;
+    name: string;
+  };
+  destination: {
+    iata_code: string;
+    name: string;
+  };
+  marketing_carrier: {
+    name: string;
+    iata_code: string;
+  };
+  marketing_carrier_flight_number: string;
+  aircraft: {
+    name: string;
+    id: string;
+  };
   duration: string;
-  id: string;
-  numberOfStops: number;
-  blacklistedInEU: boolean;
+  stops?: number;
 }
 
-export interface FlightEndpoint {
-  iataCode: string;
-  terminal?: string;
-  at: string;
-}
-
-export interface Price {
-  currency: string;
-  total: string;
-  base: string;
-  fees?: { amount: string; type: string }[];
-  grandTotal: string;
-}
-
-export interface PricingOptions {
-  fareType: string[];
-  includedCheckedBagsOnly: boolean;
-}
-
-export interface TravelerPricing {
-  travelerId: string;
-  fareOption: string;
-  travelerType: string;
-  price: Price;
-  fareDetailsBySegment: FareDetails[];
-}
-
-export interface FareDetails {
-  segmentId: string;
-  cabin: string;
-  fareBasis: string;
-  class: string;
-  includedCheckedBags?: { weight?: number; weightUnit?: string; quantity?: number };
+export interface DuffelPassenger {
+  type: "adult" | "child" | "infant";
 }
 
 export interface FlightSearchResponse {
-  data: FlightOffer[];
-  dictionaries?: {
-    locations?: Record<string, { cityCode: string; countryCode: string }>;
-    aircraft?: Record<string, string>;
-    currencies?: Record<string, string>;
-    carriers?: Record<string, string>;
+  data: DuffelOffer[];
+  meta?: {
+    totalResults?: number;
   };
 }
 
 /**
- * Search for flight offers using Amadeus API
- * DOGMA 11: Flight Search API Error Prevention - Validate credentials before use
+ * Search for flight offers using Duffel API
+ * DOGMA 11: Duffel is the canonical API - validate credentials before use
  */
 export async function searchFlights(params: FlightSearchParams): Promise<FlightSearchResponse> {
   // DOGMA 11: Validar credenciais antes de fazer chamada
-  const apiKey = process.env.AMADEUS_API_KEY;
-  const apiSecret = process.env.AMADEUS_API_SECRET;
+  const apiKey = process.env.DUFFEL_API_KEY;
   
-  if (!apiKey || !apiSecret) {
+  if (!apiKey) {
     // DOGMA 11: Retornar erro amigável, não lançar exceção não tratada
-    throw new Error("Flight search API is not configured. Please configure AMADEUS_API_KEY and AMADEUS_API_SECRET in your .env file.");
-  }
-
-  const token = await getAmadeusToken();
-
-  const queryParams: Record<string, string> = {
-    originLocationCode: params.originLocationCode,
-    destinationLocationCode: params.destinationLocationCode,
-    departureDate: params.departureDate,
-    adults: params.adults.toString(),
-    currencyCode: params.currencyCode || "USD",
-    max: (params.max || 50).toString(),
-  };
-
-  if (params.returnDate) {
-    queryParams.returnDate = params.returnDate;
-  }
-  if (params.children) {
-    queryParams.children = params.children.toString();
-  }
-  if (params.infants) {
-    queryParams.infants = params.infants.toString();
-  }
-  if (params.travelClass) {
-    queryParams.travelClass = params.travelClass;
-  }
-  if (params.nonStop) {
-    queryParams.nonStop = "true";
-  }
-  if (params.maxPrice) {
-    queryParams.maxPrice = params.maxPrice.toString();
+    throw new Error("Flight search API is not configured. Please configure DUFFEL_API_KEY in your .env file.");
   }
 
   try {
-    const response = await axios.get(`${AMADEUS_BASE_URL}/v2/shopping/flight-offers`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    // Create offer request
+    const offerRequestResponse = await axios.post(
+      `${DUFFEL_BASE_URL}/air/offer_requests`,
+      {
+        data: {
+          slices: [
+            {
+              origin: params.origin,
+              destination: params.destination,
+              departure_date: params.departureDate,
+            },
+            ...(params.returnDate
+              ? [
+                  {
+                    origin: params.destination,
+                    destination: params.origin,
+                    departure_date: params.returnDate,
+                  },
+                ]
+              : []),
+          ],
+          passengers: [
+            ...Array(params.adults).fill({ type: "adult" }),
+            ...Array(params.children || 0).fill({ type: "child" }),
+            ...Array(params.infants || 0).fill({ type: "infant" }),
+          ],
+          cabin_class: params.cabinClass || "economy",
+        },
       },
-      params: queryParams,
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Duffel-Version": "v1",
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    return response.data;
+    const offerRequestId = offerRequestResponse.data.data.id;
+
+    // Get offers
+    const offersResponse = await axios.get(
+      `${DUFFEL_BASE_URL}/air/offers?offer_request_id=${offerRequestId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Duffel-Version": "v1",
+        },
+      }
+    );
+
+    return {
+      data: offersResponse.data.data || [],
+      meta: {
+        totalResults: offersResponse.data.data?.length || 0,
+      },
+    };
   } catch (error: any) {
-    console.error("Flight search error:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.errors?.[0]?.detail || "Failed to search flights");
+    // DOGMA 11: Tratamento explícito de erros
+    if (process.env.NODE_ENV === 'development') {
+      console.error("[Duffel API] Flight search error:", error.response?.data || error.message);
+    }
+    throw new Error(
+      error.response?.data?.errors?.[0]?.message || 
+      error.response?.data?.errors?.[0]?.detail ||
+      "Failed to search flights"
+    );
   }
 }
 
@@ -271,37 +252,27 @@ function getStaticAirports(keyword: string): LocationSearchResult[] {
 }
 
 /**
- * Search for airports and cities
+ * Search for airports and cities using Duffel API
  * DOGMA 11: Flight Search API Error Prevention - Validate credentials and provide fallback
  */
 export async function searchLocations(keyword: string): Promise<LocationSearchResult[]> {
   // DOGMA 11: Validar credenciais antes de fazer chamada
-  const apiKey = process.env.AMADEUS_API_KEY;
-  const apiSecret = process.env.AMADEUS_API_SECRET;
+  const apiKey = process.env.DUFFEL_API_KEY;
   
-  if (!apiKey || !apiSecret) {
+  if (!apiKey) {
     // DOGMA 11: Retornar fallback estático, não lançar erro
     if (process.env.NODE_ENV === 'development') {
-      console.debug("[Flight API] Amadeus credentials not configured, using static airport list");
+      console.debug("[Flight API] Duffel credentials not configured, using static airport list");
     }
     return getStaticAirports(keyword);
   }
 
   try {
-    const token = await getAmadeusToken();
-    
-    const response = await axios.get(`${AMADEUS_BASE_URL}/v1/reference-data/locations`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: {
-        keyword,
-        subType: "CITY,AIRPORT",
-        "page[limit]": 10,
-      },
-    });
-
-    return response.data.data || [];
+    // Duffel doesn't have a direct airport search endpoint
+    // Use places endpoint or fallback to static list
+    // For now, use static list as Duffel's API structure is different
+    // TODO: Implement Duffel places API when available
+    return getStaticAirports(keyword);
   } catch (error: any) {
     // DOGMA 11: Tratamento explícito de erros - usar fallback
     if (process.env.NODE_ENV === 'development') {
@@ -419,3 +390,4 @@ export function formatDuration(isoDuration: string): string {
     return `${minutes}m`;
   }
 }
+

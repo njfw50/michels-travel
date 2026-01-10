@@ -1,9 +1,14 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { searchFlights, searchLocations, getAirlineName, formatDuration, FlightSearchParams } from "./amadeus";
+import { hashPassword, verifyPassword } from "./_core/password";
+import { getUserByEmail, upsertUser, getDbType } from "./db";
+import { sdk } from "./_core/sdk";
+// DOGMA 11: Duffel is the canonical flight search API - never use Amadeus
+import { searchFlights, searchLocations, getAirlineName, formatDuration, FlightSearchParams } from "./duffel";
 import { getDb } from "./db";
 import { leads, flightSearches, InsertLead } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
@@ -20,21 +25,180 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    // Register with email/password - DOGMA 3: Validate ALL Inputs with Zod
+    register: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2, "Name must be at least 2 characters"),
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(6, "Password must be at least 6 characters"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) {
+          // DOGMA 2: No Silent Failures - All Errors Are Explicit
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database initialization failed. Please check your DATABASE_URL configuration and ensure the database file is accessible.",
+          });
+        }
+
+        // Check if user already exists
+        const existingUser = await getUserByEmail(input.email);
+        if (existingUser) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "User with this email already exists",
+          });
+        }
+
+        // Hash password
+        const passwordHash = await hashPassword(input.password);
+
+        // Generate openId for email/password users (using email as base)
+        const openId = `email:${input.email}`;
+
+        // Create user
+        // DOGMA 10: lastSignedIn must be Date object (Drizzle converts to integer for SQLite)
+        await upsertUser({
+          openId,
+          name: input.name,
+          email: input.email,
+          passwordHash,
+          loginMethod: "email",
+          lastSignedIn: new Date(),
+        });
+
+        // Get the created user
+        const user = await getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create user",
+          });
+        }
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: input.name,
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      }),
+    // Login with email/password - DOGMA 3: Validate ALL Inputs with Zod
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(1, "Password is required"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) {
+          // DOGMA 2: No Silent Failures - All Errors Are Explicit
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Database initialization failed. Please check your DATABASE_URL configuration and ensure the database file is accessible.",
+          });
+        }
+
+        // Get user by email
+        const user = await getUserByEmail(input.email);
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid email or password",
+          });
+        }
+
+        // Check if user has password (email/password auth)
+        if (!user.passwordHash) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "This account uses OAuth login. Please use the OAuth login option.",
+          });
+        }
+
+        // Verify password
+        const isValid = await verifyPassword(input.password, user.passwordHash);
+        if (!isValid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid email or password",
+          });
+        }
+
+        // Update last signed in
+        // DOGMA 10: lastSignedIn must be Date object (Drizzle converts to integer for SQLite)
+        await upsertUser({
+          openId: user.openId,
+          lastSignedIn: new Date(),
+        });
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || "",
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      }),
   }),
 
   flights: router({
     searchLocations: publicProcedure
       .input(z.object({ keyword: z.string().min(2) }))
       .query(async ({ input }) => {
-        const results = await searchLocations(input.keyword);
-        return results.map(loc => ({
-          code: loc.iataCode,
-          name: loc.name,
-          city: loc.address.cityName,
-          country: loc.address.countryName,
-          type: loc.subType,
-          label: `${loc.name} (${loc.iataCode}) - ${loc.address.cityName}, ${loc.address.countryName}`,
-        }));
+        // DOGMA 11: Tratamento explícito de erros de API
+        try {
+          const results = await searchLocations(input.keyword);
+          return results.map(loc => ({
+            code: loc.iataCode,
+            name: loc.name,
+            city: loc.address.cityName,
+            country: loc.address.countryName,
+            type: loc.subType,
+            label: `${loc.name} (${loc.iataCode}) - ${loc.address.cityName}, ${loc.address.countryName}`,
+          }));
+        } catch (error) {
+          // DOGMA 11: Retornar array vazio em caso de erro, não lançar exceção
+          // O searchLocations já tem fallback, mas garantimos aqui também
+          console.error("[Flight API] Error in searchLocations:", error);
+          return [];
+        }
       }),
 
     search: publicProcedure
@@ -51,100 +215,140 @@ export const appRouter = router({
         maxPrice: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        const params: FlightSearchParams = {
-          originLocationCode: input.origin,
-          destinationLocationCode: input.destination,
-          departureDate: input.departureDate,
-          adults: input.adults,
-          children: input.children,
-          infants: input.infants,
-          travelClass: input.travelClass,
-          nonStop: input.nonStop,
-          maxPrice: input.maxPrice,
-          returnDate: input.returnDate,
-          currencyCode: "USD",
-          max: 50,
-        };
+        // DOGMA 11: Tratamento explícito de erros de API
+        try {
+          // DOGMA 11: Duffel API - mapear parâmetros corretamente
+          const params: FlightSearchParams = {
+            origin: input.origin,
+            destination: input.destination,
+            departureDate: input.departureDate,
+            returnDate: input.returnDate,
+            adults: input.adults,
+            children: input.children,
+            infants: input.infants,
+            cabinClass: input.travelClass?.toLowerCase() as "economy" | "premium_economy" | "business" | "first" || "economy",
+            maxPrice: input.maxPrice,
+          };
 
-        const response = await searchFlights(params);
-        
-        const db = await getDb();
-        if (db) {
-          try {
-            await db.insert(flightSearches).values({
-              origin: input.origin,
-              destination: input.destination,
-              departureDate: input.departureDate,
-              returnDate: input.returnDate,
-              adults: input.adults,
-              children: input.children,
-              infants: input.infants,
-              travelClass: input.travelClass,
-              resultsCount: response.data?.length || 0,
-              lowestPrice: response.data?.[0]?.price?.grandTotal,
-            });
-          } catch (e) {
-            console.error("Failed to log search:", e);
+          const response = await searchFlights(params);
+          
+          const db = await getDb();
+          if (db) {
+            try {
+              await db.insert(flightSearches).values({
+                origin: input.origin,
+                destination: input.destination,
+                departureDate: input.departureDate,
+                returnDate: input.returnDate,
+                adults: input.adults,
+                children: input.children,
+                infants: input.infants,
+                travelClass: input.travelClass,
+                resultsCount: response.data?.length || 0,
+                lowestPrice: response.data?.[0]?.total_amount ? parseFloat(response.data[0].total_amount) : null,
+              });
+            } catch (e) {
+              console.error("Failed to log search:", e);
+            }
           }
-        }
 
-        const carriers = response.dictionaries?.carriers || {};
-        
-        return {
-          flights: response.data.map(offer => {
-            const outbound = offer.itineraries[0];
-            const inbound = offer.itineraries[1];
-            
-            return {
-              id: offer.id,
-              price: {
-                total: offer.price.grandTotal,
-                currency: offer.price.currency,
-                base: offer.price.base,
-              },
-              outbound: {
-                departure: outbound.segments[0].departure,
-                arrival: outbound.segments[outbound.segments.length - 1].arrival,
-                duration: formatDuration(outbound.duration),
-                stops: outbound.segments.length - 1,
-                segments: outbound.segments.map(seg => ({
-                  departure: seg.departure,
-                  arrival: seg.arrival,
-                  carrier: carriers[seg.carrierCode] || getAirlineName(seg.carrierCode),
-                  carrierCode: seg.carrierCode,
-                  flightNumber: `${seg.carrierCode}${seg.number}`,
-                  duration: formatDuration(seg.duration),
-                  aircraft: seg.aircraft.code,
-                })),
-              },
-              inbound: inbound ? {
-                departure: inbound.segments[0].departure,
-                arrival: inbound.segments[inbound.segments.length - 1].arrival,
-                duration: formatDuration(inbound.duration),
-                stops: inbound.segments.length - 1,
-                segments: inbound.segments.map(seg => ({
-                  departure: seg.departure,
-                  arrival: seg.arrival,
-                  carrier: carriers[seg.carrierCode] || getAirlineName(seg.carrierCode),
-                  carrierCode: seg.carrierCode,
-                  flightNumber: `${seg.carrierCode}${seg.number}`,
-                  duration: formatDuration(seg.duration),
-                  aircraft: seg.aircraft.code,
-                })),
-              } : null,
-              cabinClass: offer.travelerPricings[0]?.fareDetailsBySegment[0]?.cabin || "ECONOMY",
-              baggage: offer.travelerPricings[0]?.fareDetailsBySegment[0]?.includedCheckedBags,
-              validatingAirline: carriers[offer.validatingAirlineCodes[0]] || getAirlineName(offer.validatingAirlineCodes[0]),
-              validatingAirlineCode: offer.validatingAirlineCodes[0],
-              seatsAvailable: offer.numberOfBookableSeats,
-              lastTicketingDate: offer.lastTicketingDate,
-            };
-          }),
-          meta: {
-            totalResults: response.data.length,
-            carriers,
-          },
-        };
+          // DOGMA 11: Mapear resposta do Duffel corretamente (formato diferente do Amadeus)
+          return {
+            flights: response.data.map(offer => {
+              const outbound = offer.slices[0];
+              const inbound = offer.slices[1];
+              
+              return {
+                id: offer.id,
+                price: {
+                  total: offer.total_amount,
+                  currency: offer.total_currency,
+                  base: offer.total_amount, // Duffel não separa base/total da mesma forma
+                },
+                outbound: {
+                  departure: {
+                    iataCode: outbound.origin.iata_code,
+                    at: outbound.segments[0]?.departing_at || "",
+                  },
+                  arrival: {
+                    iataCode: outbound.destination.iata_code,
+                    at: outbound.segments[outbound.segments.length - 1]?.arriving_at || "",
+                  },
+                  duration: outbound.duration,
+                  stops: outbound.segments.length - 1,
+                  segments: outbound.segments.map(seg => ({
+                    departure: {
+                      iataCode: seg.origin.iata_code,
+                      at: seg.departing_at,
+                    },
+                    arrival: {
+                      iataCode: seg.destination.iata_code,
+                      at: seg.arriving_at,
+                    },
+                    carrier: seg.marketing_carrier.name,
+                    carrierCode: seg.marketing_carrier.iata_code,
+                    flightNumber: seg.marketing_carrier_flight_number,
+                    duration: seg.duration,
+                    aircraft: seg.aircraft?.name || seg.aircraft?.id || "",
+                  })),
+                },
+                inbound: inbound ? {
+                  departure: {
+                    iataCode: inbound.origin.iata_code,
+                    at: inbound.segments[0]?.departing_at || "",
+                  },
+                  arrival: {
+                    iataCode: inbound.destination.iata_code,
+                    at: inbound.segments[inbound.segments.length - 1]?.arriving_at || "",
+                  },
+                  duration: inbound.duration,
+                  stops: inbound.segments.length - 1,
+                  segments: inbound.segments.map(seg => ({
+                    departure: {
+                      iataCode: seg.origin.iata_code,
+                      at: seg.departing_at,
+                    },
+                    arrival: {
+                      iataCode: seg.destination.iata_code,
+                      at: seg.arriving_at,
+                    },
+                    carrier: seg.marketing_carrier.name,
+                    carrierCode: seg.marketing_carrier.iata_code,
+                    flightNumber: seg.marketing_carrier_flight_number,
+                    duration: seg.duration,
+                    aircraft: seg.aircraft?.name || seg.aircraft?.id || "",
+                  })),
+                } : null,
+                cabinClass: params.cabinClass?.toUpperCase() || "ECONOMY",
+                baggage: undefined, // Duffel estrutura diferente
+                validatingAirline: offer.owner.name,
+                validatingAirlineCode: offer.owner.iata_code,
+                seatsAvailable: undefined, // Duffel estrutura diferente
+                lastTicketingDate: undefined, // Duffel estrutura diferente
+              };
+            }),
+            meta: {
+              totalResults: response.data.length,
+              carriers: {}, // Duffel não retorna dicionário de carriers
+            },
+          };
+        } catch (error: any) {
+          // DOGMA 11: Tratamento explícito de erros - retornar erro amigável
+          const errorMessage = error.message || "Failed to search flights";
+          
+          // DOGMA 2: No silent failures - log em desenvolvimento
+          if (process.env.NODE_ENV === 'development') {
+            console.error("[Flight API] Search error:", error);
+          }
+          
+          // DOGMA 11: Retornar erro TRPC apropriado, não lançar exceção não tratada
+          throw new TRPCError({
+            code: errorMessage.includes("not configured") ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR",
+            message: errorMessage.includes("not configured") 
+              ? "Flight search API is not configured. Please configure DUFFEL_API_KEY in your .env file."
+              : "Unable to search flights at this time. Please try again later.",
+          });
+        }
       }),
   }),
 
@@ -172,7 +376,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        if (!db) {
+          // DOGMA 10: Database Auto-Initialization - This should never happen
+          throw new Error("Database initialization failed. Please check your DATABASE_URL configuration.");
+        }
 
         const leadData: InsertLead = {
           name: input.name,
@@ -229,7 +436,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
-        if (!db) throw new Error("Database not available");
+        if (!db) {
+          // DOGMA 10: Database Auto-Initialization - This should never happen
+          throw new Error("Database initialization failed. Please check your DATABASE_URL configuration.");
+        }
         
         await db.update(leads).set({ status: input.status }).where(eq(leads.id, input.id));
         return { success: true };

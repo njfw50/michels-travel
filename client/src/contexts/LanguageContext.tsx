@@ -168,7 +168,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const t = (key: string): string => {
     const translation = translations[key];
     if (!translation) {
-      console.warn(`Translation missing for key: ${key}`);
+      // DOGMA 9: Console errors prevention - only log in development
+      if (import.meta.env.DEV) {
+        console.warn(`[Translation] Missing key: ${key}`);
+      }
       return key;
     }
     return translation[language] || translation.en || key;

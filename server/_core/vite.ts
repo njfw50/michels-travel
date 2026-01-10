@@ -7,20 +7,32 @@ import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
 export async function setupVite(app: Express, server: Server) {
+  console.log("[Vite] Setting up Vite dev server...");
+  console.log("[Vite] NODE_ENV:", process.env.NODE_ENV);
+  console.log("[Vite] process.cwd():", process.cwd());
+  
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
     allowedHosts: true as const,
   };
 
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    server: serverOptions,
-    appType: "custom",
-  });
+  let vite;
+  try {
+    vite = await createViteServer({
+      ...viteConfig,
+      configFile: false,
+      server: serverOptions,
+      appType: "custom",
+    });
+    console.log("[Vite] Vite server created successfully");
+  } catch (error) {
+    console.error("[Vite] Failed to create Vite server:", error);
+    throw error;
+  }
 
   app.use(vite.middlewares);
+  console.log("[Vite] Vite middlewares registered");
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
@@ -31,22 +43,29 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       // Try multiple paths to find index.html
-      let clientTemplate = path.resolve(import.meta.dirname, "../..", "client", "index.html");
+      const possiblePaths = [
+        path.resolve(import.meta.dirname, "../..", "client", "index.html"),
+        path.resolve(process.cwd(), "client", "index.html"),
+        path.resolve(import.meta.dirname, "../..", "michels-travel", "client", "index.html"),
+        path.resolve(process.cwd(), "michels-travel", "client", "index.html"),
+      ];
       
-      // If not found, try michels-travel/client/index.html
-      if (!fs.existsSync(clientTemplate)) {
-        const altPath = path.resolve(import.meta.dirname, "../..", "michels-travel", "client", "index.html");
-        if (fs.existsSync(altPath)) {
-          clientTemplate = altPath;
-          console.log(`[Vite] Using michels-travel client: ${clientTemplate}`);
-        } else {
-          console.error(`[Vite] index.html not found. Tried:`);
-          console.error(`  - ${path.resolve(import.meta.dirname, "../..", "client", "index.html")}`);
-          console.error(`  - ${altPath}`);
-          return res.status(404).json({ 
-            error: "Client files not found. Make sure to run 'pnpm dev' from michels-travel directory." 
-          });
+      let clientTemplate: string | null = null;
+      for (const candidatePath of possiblePaths) {
+        if (fs.existsSync(candidatePath)) {
+          clientTemplate = candidatePath;
+          console.log(`[Vite] ✅ Found index.html at: ${clientTemplate}`);
+          break;
         }
+      }
+      
+      if (!clientTemplate) {
+        console.error(`[Vite] ❌ index.html not found. Tried:`);
+        possiblePaths.forEach(p => console.error(`  - ${p}`));
+        return res.status(404).json({ 
+          error: "Client files not found. Make sure to run 'pnpm dev' from michels-travel directory.",
+          triedPaths: possiblePaths
+        });
       }
 
       // always reload the index.html file from disk incase it changes

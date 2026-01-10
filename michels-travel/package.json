@@ -49,6 +49,9 @@
     "@trpc/server": "^11.6.0",
     "axios": "^1.12.0",
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.5.0",
+    "browserslist": "^4.28.1",
+    "caniuse-lite": "^1.0.30001762",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -108,6 +111,11 @@
     "vitest": "^2.1.4"
   },
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "browserslist": [
+    "defaults",
+    "not dead",
+    "not op_mini all"
+  ],
   "pnpm": {
     "patchedDependencies": {
       "wouter@3.7.1": "patches/wouter@3.7.1.patch"

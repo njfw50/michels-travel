@@ -76,9 +76,15 @@ export function useAuth(options?: UseAuthOptions) {
     state.user,
   ]);
 
+  // DOGMA 2: Explicit refresh - invalidate cache before refetch
+  const refresh = useCallback(async () => {
+    await utils.auth.me.invalidate();
+    await meQuery.refetch();
+  }, [utils, meQuery]);
+
   return {
     ...state,
-    refresh: () => meQuery.refetch(),
+    refresh,
     logout,
   };
 }

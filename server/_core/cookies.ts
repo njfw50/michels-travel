@@ -39,10 +39,18 @@ export function getSessionCookieOptions(
   //       ? hostname
   //       : undefined;
 
+  // DOGMA 2: Explicit configuration - fix cookie settings for localhost
+  const isLocalhost = LOCAL_HOSTS.has(req.hostname || '') || isIpAddress(req.hostname || '');
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   return {
     httpOnly: true,
     path: "/",
-    sameSite: "none",
-    secure: isSecureRequest(req),
+    // In development (localhost), use 'lax' instead of 'none' for better compatibility
+    // In production, use 'none' for cross-site requests
+    sameSite: isLocalhost && !isProduction ? "lax" : "none",
+    // In development (localhost), secure can be false
+    // In production, secure must be true for sameSite: 'none'
+    secure: isProduction ? isSecureRequest(req) : false,
   };
 }

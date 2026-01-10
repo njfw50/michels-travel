@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { initializeAnalytics } from "./utils/analytics";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -25,7 +26,10 @@ queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+    // DOGMA 2: Explicit errors - but only log in development
+    if (import.meta.env.DEV) {
+      console.error("[API Query Error]", error);
+    }
   }
 });
 
@@ -33,7 +37,10 @@ queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Mutation Error]", error);
+    // DOGMA 2: Explicit errors - but only log in development
+    if (import.meta.env.DEV) {
+      console.error("[API Mutation Error]", error);
+    }
   }
 });
 
@@ -51,6 +58,10 @@ const trpcClient = trpc.createClient({
     }),
   ],
 });
+
+// Initialize analytics if configured (DOGMA 9: Console Error Prevention)
+// Must be called early to intercept errors from blocked analytics scripts
+initializeAnalytics();
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>

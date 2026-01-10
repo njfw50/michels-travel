@@ -471,26 +471,19 @@ if (!fs.existsSync(filePath)) {
 ### DOGMA 11: Flight Search API Error Prevention - Zero API Errors in Console
 **Prioridade:** P0 - Crítico  
 **Versão:** 1.6.0  
-**Data de Estabelecimento:** 2025-01-02  
-**Atualização:** 2025-01-02 - Duffel estabelecido como API padrão
+**Data de Estabelecimento:** 2025-01-02
 
 **Regra:**
-- **Duffel é a API OFICIAL de busca de voos** - NUNCA usar Amadeus ou outras APIs sem autorização
-- APIs de busca de voos DEVEM validar credenciais antes de fazer chamadas
+- APIs de busca de voos (Amadeus, Duffel, etc.) DEVEM validar credenciais antes de fazer chamadas
 - Erros de API não configurada NUNCA devem aparecer como erros 500 no console
 - Sistema deve fornecer mensagens amigáveis quando API não está disponível
 - Busca de aeroportos deve ter fallback quando API não está configurada
 - TODOS os erros de API devem ser tratados explicitamente e retornar mensagens claras
 
-**API Padrão:**
-- **Duffel** é a API canônica e obrigatória para busca de voos
-- Variáveis de ambiente: `DUFFEL_API_KEY` (não `AMADEUS_API_KEY`)
-- Código NUNCA deve referenciar Amadeus - apenas Duffel
-
 **Implementação:**
 1. **Validação de Credenciais:**
-   - Verificar se `DUFFEL_API_KEY` está configurado
-   - Se não configurado, retornar erro amigável, não lançar exceção não tratada
+   - Verificar se `AMADEUS_API_KEY` e `AMADEUS_API_SECRET` estão configurados
+   - Se não configurados, retornar erro amigável, não lançar exceção não tratada
 
 2. **Tratamento de Erros:**
    - Erros de API devem ser capturados e retornados como TRPCError com código apropriado
@@ -509,18 +502,17 @@ if (!fs.existsSync(filePath)) {
 
 **Exemplos:**
 ```typescript
-// ✅ Correto - Usar Duffel e validar antes de usar
+// ✅ Correto - Validar antes de usar
 export async function searchLocations(keyword: string): Promise<LocationSearchResult[]> {
-  // DOGMA 11: Duffel é a API padrão - validar credenciais antes de fazer chamada
-  if (!process.env.DUFFEL_API_KEY) {
+  // DOGMA 11: Validar credenciais antes de fazer chamada
+  if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
     // Retornar lista estática ou erro amigável, não lançar exceção
     return getStaticAirports(keyword);
   }
   
   try {
-    // Usar Duffel API, não Amadeus
-    const results = await duffelClient.airports.search({ query: keyword });
-    // ... processar resultados
+    const token = await getAmadeusToken();
+    // ... fazer chamada
   } catch (error) {
     // DOGMA 2: Tratamento explícito de erros
     console.error("[Flight API] Error:", error);
@@ -528,9 +520,9 @@ export async function searchLocations(keyword: string): Promise<LocationSearchRe
   }
 }
 
-// ❌ Errado - Usar Amadeus (viola DOGMA 11)
+// ❌ Errado - Lançar erro não tratado
 export async function searchLocations(keyword: string) {
-  const token = await getAmadeusToken(); // NUNCA fazer isso - Duffel é obrigatório
+  const token = await getAmadeusToken(); // Pode lançar erro se não configurado
   // ...
 }
 ```
@@ -542,10 +534,9 @@ export async function searchLocations(keyword: string) {
 - Desenvolvedores precisam de mensagens claras sobre configuração faltando
 
 **Erros Específicos Tratados:**
-- **"Duffel API credentials not configured"**: Retornar lista estática de aeroportos ou mensagem amigável
+- **"Amadeus API credentials not configured"**: Retornar lista estática de aeroportos ou mensagem amigável
 - **"Failed to load resource: 500"**: Prevenir com validação prévia e tratamento de erros
 - **Inputs de aeroportos não populados**: Fornecer fallback estático ou mensagem clara
-- **Mensagens mencionando Amadeus**: NUNCA devem aparecer - sempre mencionar Duffel
 
 ---
 

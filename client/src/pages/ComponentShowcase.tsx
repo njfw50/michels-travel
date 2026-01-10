@@ -194,7 +194,10 @@ export default function ComponentsShowcase() {
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const handleDialogSubmit = () => {
-    console.log("Dialog submitted with value:", dialogInput);
+    // DOGMA 9: Console errors prevention - remove debug logs in production
+    if (import.meta.env.DEV) {
+      console.debug("[Dialog] Submitted with value:", dialogInput);
+    }
     sonnerToast.success("Submitted successfully", {
       description: `Input: ${dialogInput}`,
     });
