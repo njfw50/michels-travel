@@ -309,47 +309,82 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Regular authentication flow
+    // CANONICAL AUTHENTICATION FLOW
+    // DOGMA 2: No Silent Failures - explicit error handling
+    // DOGMA 11: Support both OAuth and email/password authentication
+    
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
     
-    // DOGMA 2: Explicit debugging - log cookie status in development
-    if (process.env.NODE_ENV === 'development' && !sessionCookie) {
-      console.debug(`[Auth] No session cookie found. Cookie header: ${req.headers.cookie ? 'present' : 'missing'}`);
+    // DOGMA 2: Structured logging (no secrets) for debugging
+    if (process.env.NODE_ENV === 'development') {
+      if (!sessionCookie) {
+        console.debug(`[Auth] No session cookie found. Cookie header: ${req.headers.cookie ? 'present' : 'missing'}`);
+      } else {
+        console.debug(`[Auth] Session cookie found (length: ${sessionCookie.length})`);
+      }
     }
     
+    // Verify session JWT
     const session = await this.verifySession(sessionCookie);
 
     if (!session) {
+      // DOGMA 2: Explicit error - don't log secrets
+      if (process.env.NODE_ENV === 'development') {
+        console.debug("[Auth] Session verification failed - invalid or missing session cookie");
+      }
       throw ForbiddenError("Invalid session cookie");
     }
 
     const sessionUserId = session.openId;
     const signedInAt = new Date();
+    
+    // CANONICAL GUARD: Get user from database
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
+    // CANONICAL GUARD: Handle missing user based on login method
     if (!user) {
-      try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-        await db.upsertUser({
-          openId: userInfo.openId,
-          name: userInfo.name || null,
-          email: userInfo.email ?? null,
-          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-          lastSignedIn: signedInAt,
-        });
-        user = await db.getUserByOpenId(userInfo.openId);
-      } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
+      // Check if this is an email/password user (openId format: "email:user@example.com")
+      const isEmailPasswordUser = sessionUserId.startsWith("email:");
+      
+      if (isEmailPasswordUser) {
+        // Email/password users should exist in DB - if not found, it's an error
+        // DOGMA 2: Explicit error message
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[Auth] Email/password user not found in database: ${sessionUserId}`);
+        }
+        throw ForbiddenError("User account not found. Please register or contact support.");
+      } else {
+        // OAuth users: try to sync from OAuth server
+        try {
+          const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+          await db.upsertUser({
+            openId: userInfo.openId,
+            name: userInfo.name || null,
+            email: userInfo.email ?? null,
+            loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
+            lastSignedIn: signedInAt,
+          });
+          user = await db.getUserByOpenId(userInfo.openId);
+        } catch (error: any) {
+          // DOGMA 2: Structured logging (no secrets)
+          const errorMessage = error?.message || String(error);
+          console.error("[Auth] Failed to sync OAuth user:", {
+            errorType: error?.constructor?.name || "Unknown",
+            hasMessage: !!errorMessage,
+            openId: sessionUserId.substring(0, 10) + "...", // Partial openId for debugging, not full secret
+          });
+          throw ForbiddenError("Failed to sync user info from authentication provider");
+        }
       }
     }
 
     if (!user) {
-      throw ForbiddenError("User not found");
+      // DOGMA 2: This should never happen after the above checks, but explicit error
+      throw ForbiddenError("User not found after authentication");
     }
 
+    // Update last signed in timestamp
     await db.upsertUser({
       openId: user.openId,
       lastSignedIn: signedInAt,

@@ -41,6 +41,24 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // Square webhook endpoint (for payment notifications)
+  // DOGMA 1: Security First - Webhook signature verification
+  // DOGMA 4: External Service Isolation - All webhook logic in square-webhook.ts
+  app.post(
+    "/api/webhooks/square",
+    express.json({ limit: "10mb" }),
+    async (req, res) => {
+      try {
+        const { handleSquareWebhook } = await import("../square-webhook");
+        await handleSquareWebhook(req, res);
+      } catch (error: any) {
+        console.error("[Square Webhook] Error:", error);
+        res.status(500).json({ error: "Webhook processing failed" });
+      }
+    }
+  );
+  
   // tRPC API
   app.use(
     "/api/trpc",

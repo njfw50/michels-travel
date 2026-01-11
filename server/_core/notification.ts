@@ -60,26 +60,48 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 /**
  * Dispatches a project-owner notification through the Manus Notification Service.
  * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
+ * cannot be reached or is not configured (callers can fall back to email/slack).
+ * 
+ * CANONICAL BEHAVIOR:
+ * - In development: Missing URL/key logs warning and returns false (best-effort)
+ * - In production: Missing URL/key logs warning and returns false (best-effort)
+ * - Validation errors still bubble up as TRPC errors so callers can fix the payload
+ * - Network/HTTP errors are caught and return false (never throw)
  */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
+  // CANONICAL: Best-effort notification - missing config should not crash the app
   if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
+    if (ENV.isProduction) {
+      console.warn(
+        "[Notification] ⚠️ Notification service URL is not configured. " +
+        "Set BUILT_IN_FORGE_API_URL in your .env file to enable notifications."
+      );
+    } else {
+      console.debug(
+        "[Notification] ℹ️ Notification service URL not configured (development mode). " +
+        "Notifications will be skipped. Set BUILT_IN_FORGE_API_URL in .env to enable."
+      );
+    }
+    return false;
   }
 
   if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
-    });
+    if (ENV.isProduction) {
+      console.warn(
+        "[Notification] ⚠️ Notification service API key is not configured. " +
+        "Set BUILT_IN_FORGE_API_KEY in your .env file to enable notifications."
+      );
+    } else {
+      console.debug(
+        "[Notification] ℹ️ Notification service API key not configured (development mode). " +
+        "Notifications will be skipped. Set BUILT_IN_FORGE_API_KEY in .env to enable."
+      );
+    }
+    return false;
   }
 
   const endpoint = buildEndpointUrl(ENV.forgeApiUrl);

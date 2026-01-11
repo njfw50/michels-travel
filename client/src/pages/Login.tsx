@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, useLocation } from "wouter";
+import { Logo } from "@/components/Logo";
 import { Plane, Loader2, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -26,13 +27,18 @@ export default function Login() {
   const loginUrl = getLoginUrl();
 
   const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       toast.success("Login realizado com sucesso!");
       // DOGMA 2: Wait for refresh to complete before navigating
       await refresh();
       // Small delay to ensure state is updated
       setTimeout(() => {
-        navigate("/dashboard");
+        // CANONICAL: Redirect admin to admin dashboard, regular users to user dashboard
+        if (data.user?.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }, 100);
     },
     onError: (error) => {
@@ -41,13 +47,18 @@ export default function Login() {
   });
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       toast.success("Conta criada com sucesso!");
       // DOGMA 2: Wait for refresh to complete before navigating
       await refresh();
       // Small delay to ensure state is updated
       setTimeout(() => {
-        navigate("/dashboard");
+        // CANONICAL: Redirect admin to admin dashboard, regular users to user dashboard
+        if (data.user?.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }, 100);
     },
     onError: (error) => {
@@ -95,11 +106,8 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Plane className="h-8 w-8 text-white" />
-            </div>
+            <Logo variant="default" showTagline={true} />
           </div>
-          <CardTitle className="text-2xl font-bold">Michel's Travel</CardTitle>
           <CardDescription className="mt-2">
             {isRegistering ? "Criar nova conta" : "Faça login para continuar"}
           </CardDescription>
@@ -127,13 +135,13 @@ export default function Login() {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email ou Usuário</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
-                    type="email"
-                    placeholder="seu@email.com"
+                    type="text"
+                    placeholder="seu@email.com ou admin"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}

@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { EnvironmentIndicator } from "@/components/EnvironmentIndicator";
+import { Logo } from "@/components/Logo";
 import { FlightSearch, SearchParams } from "@/components/FlightSearch";
 import { FlightCard } from "@/components/FlightCard";
 import { FlightFilters } from "@/components/FlightFilters";
 import { BookingForm } from "@/components/BookingForm";
+import { CheckoutModal } from "@/components/CheckoutModal";
 import { TravelChatbot } from "@/components/TravelChatbot";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -102,8 +105,15 @@ export default function Home() {
     }, 100);
   };
 
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
   const handleSelectFlight = (flight: Flight) => {
     setSelectedFlight(flight);
+    setCheckoutOpen(true); // Open checkout modal instead of quote form
+  };
+
+  const handleRequestQuote = () => {
+    setCheckoutOpen(false);
     setBookingType("quote");
     setBookingOpen(true);
   };
@@ -167,14 +177,7 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <Plane className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Michel's Travel
-              </span>
-            </Link>
+            <Logo variant="default" showTagline={false} />
 
             <div className="hidden md:flex items-center gap-8">
               <a href="#search" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
@@ -192,9 +195,10 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-4">
+              <EnvironmentIndicator />
               <Link href="/login">
                 <Button variant="outline" size="sm">
-                  {t("nav.login") || "Login"}
+                  {t("nav.login")}
                 </Button>
               </Link>
               <LanguageSelector />
@@ -490,12 +494,7 @@ export default function Home() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
-                <Plane className="h-5 w-5" />
-              </div>
-              <span className="font-bold text-xl">Michel's Travel</span>
-            </div>
+            <Logo variant="default" showTagline={true} lightMode={true} />
             <div className="flex items-center gap-6 text-sm text-gray-400">
               <a href="#" className="hover:text-white transition-colors">
                 {t("footer.privacy")}
@@ -511,6 +510,13 @@ export default function Home() {
         </div>
       </footer>
 
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        flight={selectedFlight}
+        searchParams={searchParams}
+        onRequestQuote={handleRequestQuote}
+      />
       <BookingForm
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}

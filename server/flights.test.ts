@@ -2,9 +2,9 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
-// Mock the Amadeus service
-vi.mock("./amadeus", () => ({
-  getAmadeusToken: vi.fn().mockResolvedValue("mock-token"),
+// Mock the Duffel service
+vi.mock("./duffel", () => ({
+  getDuffelToken: vi.fn().mockResolvedValue("mock-token"),
   formatDuration: vi.fn().mockImplementation((duration: string) => {
     const match = duration.match(/PT(\d+H)?(\d+M)?/);
     if (!match) return duration;
@@ -16,52 +16,39 @@ vi.mock("./amadeus", () => ({
     data: [
       {
         id: "1",
-        price: { total: "500.00", currency: "USD", base: "450.00", grandTotal: "500.00" },
-        itineraries: [
+        total_amount: "500.00",
+        total_currency: "USD",
+        slices: [
           {
+            origin: { iata_code: "JFK", name: "John F. Kennedy International Airport" },
+            destination: { iata_code: "LAX", name: "Los Angeles International Airport" },
             duration: "PT6H",
             segments: [
               {
-                departure: { iataCode: "JFK", at: "2025-01-15T10:00:00", terminal: "1" },
-                arrival: { iataCode: "LAX", at: "2025-01-15T13:00:00", terminal: "4" },
-                carrierCode: "AA",
-                number: "100",
-                aircraft: { code: "777" },
-                operating: { carrierCode: "AA" },
+                origin: { iata_code: "JFK", name: "John F. Kennedy International Airport" },
+                destination: { iata_code: "LAX", name: "Los Angeles International Airport" },
+                departing_at: "2025-01-15T10:00:00",
+                arriving_at: "2025-01-15T16:00:00",
+                marketing_carrier: { iata_code: "AA", name: "American Airlines" },
+                marketing_carrier_flight_number: "100",
                 duration: "PT6H",
+                aircraft: { name: "Boeing 777" },
               },
             ],
           },
         ],
-        travelerPricings: [
-          {
-            fareDetailsBySegment: [
-              {
-                cabin: "ECONOMY",
-                includedCheckedBags: { weight: 23, weightUnit: "KG" },
-              },
-            ],
-          },
-        ],
-        validatingAirlineCodes: ["AA"],
-        numberOfBookableSeats: 5,
-        lastTicketingDate: "2025-01-10",
+        owner: { iata_code: "AA", name: "American Airlines" },
       },
     ],
-    dictionaries: {
-      carriers: { AA: "American Airlines" },
+  }),
+  searchLocations: vi.fn().mockResolvedValue([
+    {
+      iataCode: "JFK",
+      name: "JOHN F KENNEDY INTL",
+      address: { cityName: "NEW YORK", countryName: "UNITED STATES" },
+      subType: "AIRPORT",
     },
-  }),
-  searchLocations: vi.fn().mockResolvedValue({
-    data: [
-      {
-        iataCode: "JFK",
-        name: "JOHN F KENNEDY INTL",
-        address: { cityName: "NEW YORK", countryName: "UNITED STATES" },
-        subType: "AIRPORT",
-      },
-    ],
-  }),
+  ]),
 }));
 
 function createPublicContext(): TrpcContext {

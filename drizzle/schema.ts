@@ -97,3 +97,29 @@ export const chatConversations = mysqlTable("chatConversations", {
 
 export type ChatConversation = typeof chatConversations.$inferSelect;
 export type InsertChatConversation = typeof chatConversations.$inferInsert;
+
+/**
+ * Orders table for flight purchases
+ * Stores order attempts and status
+ */
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  offerId: varchar("offerId", { length: 255 }).notNull(), // Duffel offer ID
+  duffelOrderId: varchar("duffelOrderId", { length: 255 }), // Duffel order ID after creation
+  amount: int("amount").notNull(), // Amount in cents
+  currency: varchar("currency", { length: 10 }).notNull().default("USD"),
+  status: mysqlEnum("status", ["pending", "processing", "confirmed", "failed", "cancelled"]).default("pending").notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerName: varchar("customerName", { length: 255 }),
+  paymentIntentId: varchar("paymentIntentId", { length: 255 }), // Stripe PaymentIntent ID
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "succeeded", "failed"]),
+  idempotencyKey: varchar("idempotencyKey", { length: 255 }).notNull().unique(), // Prevent double charges
+  passengerDetails: json("passengerDetails"), // Passenger information
+  flightDetails: json("flightDetails"), // Flight offer details
+  errorMessage: text("errorMessage"), // Error message if order failed
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;

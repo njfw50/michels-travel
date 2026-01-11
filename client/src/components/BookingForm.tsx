@@ -107,26 +107,32 @@ export function BookingForm({ open, onClose, type, flight, searchParams }: Booki
           <DialogTitle>
             {type === "booking" ? t("booking.title") : t("booking.quote")}
           </DialogTitle>
-          <DialogDescription>
-            {flight && searchParams && (
-              <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
-                <div className="font-medium text-foreground">
-                  {searchParams.originName} → {searchParams.destinationName}
-                </div>
-                <div className="text-muted-foreground">
-                  {searchParams.departureDate}
-                  {searchParams.returnDate && ` - ${searchParams.returnDate}`}
-                </div>
-                <div className="text-muted-foreground">
-                  {flight.validatingAirline} • {flight.cabinClass}
-                </div>
-                <div className="font-semibold text-primary mt-1">
-                  ${parseFloat(flight.price.total).toLocaleString()} {flight.price.currency}
-                </div>
-              </div>
-            )}
-          </DialogDescription>
+          {flight && searchParams ? (
+            <DialogDescription className="sr-only">
+              Flight details: {searchParams.originName} to {searchParams.destinationName}
+            </DialogDescription>
+          ) : null}
         </DialogHeader>
+        
+        {/* Flight details block - moved outside DialogDescription to avoid invalid HTML nesting */}
+        {/* DialogDescription renders as <p>, which cannot contain <div> elements */}
+        {flight && searchParams && (
+          <div className="mt-2 p-3 bg-muted rounded-lg text-sm">
+            <div className="font-medium text-foreground">
+              {searchParams.originName} → {searchParams.destinationName}
+            </div>
+            <div className="text-muted-foreground">
+              {searchParams.departureDate}
+              {searchParams.returnDate && ` - ${searchParams.returnDate}`}
+            </div>
+            <div className="text-muted-foreground">
+              {flight.validatingAirline} • {flight.cabinClass}
+            </div>
+            <div className="font-semibold text-primary mt-1">
+              ${parseFloat(flight.price.total).toLocaleString()} {flight.price.currency}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">

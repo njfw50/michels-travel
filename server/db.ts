@@ -112,6 +112,80 @@ export async function getDb() {
             
             CREATE INDEX IF NOT EXISTS idx_users_openId ON users(openId);
             CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            
+            -- Leads table for booking requests and quote inquiries
+            CREATE TABLE IF NOT EXISTS leads (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              email TEXT NOT NULL,
+              phone TEXT,
+              type TEXT NOT NULL,
+              status TEXT NOT NULL DEFAULT 'new',
+              origin TEXT,
+              originName TEXT,
+              destination TEXT,
+              destinationName TEXT,
+              departureDate TEXT,
+              returnDate TEXT,
+              adults INTEGER,
+              children INTEGER,
+              infants INTEGER,
+              travelClass TEXT,
+              flightDetails TEXT,
+              estimatedPrice TEXT,
+              message TEXT,
+              preferredLanguage TEXT DEFAULT 'en',
+              createdAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+              updatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+            );
+            
+            CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
+            CREATE INDEX IF NOT EXISTS idx_leads_createdAt ON leads(createdAt);
+            CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+            
+            -- Flight searches log for analytics
+            CREATE TABLE IF NOT EXISTS flightSearches (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              origin TEXT NOT NULL,
+              destination TEXT NOT NULL,
+              departureDate TEXT NOT NULL,
+              returnDate TEXT,
+              adults INTEGER NOT NULL,
+              children INTEGER,
+              infants INTEGER,
+              travelClass TEXT,
+              resultsCount INTEGER,
+              lowestPrice TEXT,
+              searchedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+            );
+            
+            CREATE INDEX IF NOT EXISTS idx_flightSearches_searchedAt ON flightSearches(searchedAt);
+            CREATE INDEX IF NOT EXISTS idx_flightSearches_origin_destination ON flightSearches(origin, destination);
+            
+            -- Orders table for flight purchases
+            CREATE TABLE IF NOT EXISTS orders (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              offerId TEXT NOT NULL,
+              duffelOrderId TEXT,
+              amount INTEGER NOT NULL,
+              currency TEXT NOT NULL DEFAULT 'USD',
+              status TEXT NOT NULL DEFAULT 'pending',
+              customerEmail TEXT NOT NULL,
+              customerName TEXT,
+              paymentIntentId TEXT,
+              paymentStatus TEXT,
+              idempotencyKey TEXT NOT NULL UNIQUE,
+              passengerDetails TEXT,
+              flightDetails TEXT,
+              errorMessage TEXT,
+              createdAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+              updatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+            );
+            
+            CREATE INDEX IF NOT EXISTS idx_orders_customerEmail ON orders(customerEmail);
+            CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+            CREATE INDEX IF NOT EXISTS idx_orders_idempotencyKey ON orders(idempotencyKey);
+            CREATE INDEX IF NOT EXISTS idx_orders_createdAt ON orders(createdAt);
           `);
           
           // Verify schema was created
@@ -196,6 +270,80 @@ export async function getDb() {
                 );
                 CREATE INDEX IF NOT EXISTS idx_users_openId ON users(openId);
                 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+                
+                -- Leads table for booking requests and quote inquiries
+                CREATE TABLE IF NOT EXISTS leads (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  email TEXT NOT NULL,
+                  phone TEXT,
+                  type TEXT NOT NULL,
+                  status TEXT NOT NULL DEFAULT 'new',
+                  origin TEXT,
+                  originName TEXT,
+                  destination TEXT,
+                  destinationName TEXT,
+                  departureDate TEXT,
+                  returnDate TEXT,
+                  adults INTEGER,
+                  children INTEGER,
+                  infants INTEGER,
+                  travelClass TEXT,
+                  flightDetails TEXT,
+                  estimatedPrice TEXT,
+                  message TEXT,
+                  preferredLanguage TEXT DEFAULT 'en',
+                  createdAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                  updatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                );
+                
+                CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
+                CREATE INDEX IF NOT EXISTS idx_leads_createdAt ON leads(createdAt);
+                CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+                
+                -- Flight searches log for analytics
+                CREATE TABLE IF NOT EXISTS flightSearches (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  origin TEXT NOT NULL,
+                  destination TEXT NOT NULL,
+                  departureDate TEXT NOT NULL,
+                  returnDate TEXT,
+                  adults INTEGER NOT NULL,
+                  children INTEGER,
+                  infants INTEGER,
+                  travelClass TEXT,
+                  resultsCount INTEGER,
+                  lowestPrice TEXT,
+                  searchedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                );
+                
+                CREATE INDEX IF NOT EXISTS idx_flightSearches_searchedAt ON flightSearches(searchedAt);
+                CREATE INDEX IF NOT EXISTS idx_flightSearches_origin_destination ON flightSearches(origin, destination);
+                
+                -- Orders table for flight purchases
+                CREATE TABLE IF NOT EXISTS orders (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  offerId TEXT NOT NULL,
+                  duffelOrderId TEXT,
+                  amount INTEGER NOT NULL,
+                  currency TEXT NOT NULL DEFAULT 'USD',
+                  status TEXT NOT NULL DEFAULT 'pending',
+                  customerEmail TEXT NOT NULL,
+                  customerName TEXT,
+                  paymentIntentId TEXT,
+                  paymentStatus TEXT,
+                  idempotencyKey TEXT NOT NULL UNIQUE,
+                  passengerDetails TEXT,
+                  flightDetails TEXT,
+                  errorMessage TEXT,
+                  createdAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+                  updatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+                );
+                
+                CREATE INDEX IF NOT EXISTS idx_orders_customerEmail ON orders(customerEmail);
+                CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+                CREATE INDEX IF NOT EXISTS idx_orders_idempotencyKey ON orders(idempotencyKey);
+                CREATE INDEX IF NOT EXISTS idx_orders_createdAt ON orders(createdAt);
               `);
               _db = drizzleSQLite(_sqliteDb);
               console.log(`[Database] ✅ Recovered and connected to SQLite: ${filePath}`);

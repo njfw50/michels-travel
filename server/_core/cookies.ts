@@ -24,33 +24,39 @@ function isSecureRequest(req: Request) {
 export function getSessionCookieOptions(
   req: Request
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
-  // const hostname = req.hostname;
-  // const shouldSetDomain =
-  //   hostname &&
-  //   !LOCAL_HOSTS.has(hostname) &&
-  //   !isIpAddress(hostname) &&
-  //   hostname !== "127.0.0.1" &&
-  //   hostname !== "::1";
-
-  // const domain =
-  //   shouldSetDomain && !hostname.startsWith(".")
-  //     ? `.${hostname}`
-  //     : shouldSetDomain
-  //       ? hostname
-  //       : undefined;
-
-  // DOGMA 2: Explicit configuration - fix cookie settings for localhost
-  const isLocalhost = LOCAL_HOSTS.has(req.hostname || '') || isIpAddress(req.hostname || '');
-  const isProduction = process.env.NODE_ENV === 'production';
+  // CANONICAL COOKIE CONFIGURATION
+  // DOGMA 2: Explicit configuration for security and compatibility
   
+  const hostname = req.hostname;
+  const isLocalhost = LOCAL_HOSTS.has(hostname) || isIpAddress(hostname);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isSecure = isSecureRequest(req);
+  
+  // Determine domain (only set for non-localhost in production)
+  const shouldSetDomain =
+    !isLocalhost &&
+    isProduction &&
+    hostname &&
+    hostname !== "127.0.0.1" &&
+    hostname !== "::1";
+
+  const domain = shouldSetDomain && !hostname.startsWith(".")
+    ? `.${hostname}`
+    : shouldSetDomain
+      ? hostname
+      : undefined;
+
+  // CANONICAL COOKIE SETTINGS:
+  // - httpOnly: true (prevents XSS attacks)
+  // - path: "/" (available to all routes)
+  // - sameSite: "lax" for localhost (better compatibility), "none" for production (cross-site)
+  // - secure: false for localhost HTTP, true for production HTTPS
+  // - domain: undefined for localhost, set for production cross-subdomain
   return {
     httpOnly: true,
     path: "/",
-    // In development (localhost), use 'lax' instead of 'none' for better compatibility
-    // In production, use 'none' for cross-site requests
-    sameSite: isLocalhost && !isProduction ? "lax" : "none",
-    // In development (localhost), secure can be false
-    // In production, secure must be true for sameSite: 'none'
-    secure: isProduction ? isSecureRequest(req) : false,
+    sameSite: isLocalhost ? "lax" : (isSecure ? "none" : "lax"),
+    secure: isSecure,
+    domain,
   };
 }

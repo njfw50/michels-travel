@@ -5,14 +5,140 @@ import { ENV } from "./_core/env";
 const DUFFEL_BASE_URL = "https://api.duffel.com";
 
 /**
+ * Canonical API version required by Duffel API
+ * DOGMA: This version MUST be included in all requests to Duffel API
+ * 
+ * NOTE: Duffel v1 and date-based versions (e.g., 2023-04-03) are deprecated.
+ * All requests MUST use v2.
+ */
+const DUFFEL_API_VERSION = "v2";
+
+/**
+ * Get Duffel API request headers with canonical version
+ * DOGMA 11: All Duffel API requests MUST include the Duffel-Version header
+ * 
+ * This function centralizes header construction to ensure:
+ * 1. Authorization header is always present
+ * 2. Duffel-Version header is always set to the canonical version
+ * 3. Content-Type and Accept headers are properly set
+ * 
+ * @param apiKey - The Duffel API key (Bearer token)
+ * @param additionalHeaders - Optional additional headers to merge
+ * @returns Headers object ready for axios/fetch requests
+ * @throws Error if apiKey is missing or if Duffel-Version header is missing (defensive guard)
+ */
+export function getDuffelHeaders(
+  apiKey: string,
+  additionalHeaders?: Record<string, string>
+): Record<string, string> {
+  // DOGMA 2: No silent failures - validate API key
+  if (!apiKey || apiKey.trim() === "") {
+    throw new Error(
+      "Duffel API key is required. Please configure DUFFEL_API_KEY in your .env file."
+    );
+  }
+
+  // Construct canonical headers
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${apiKey}`,
+    "Duffel-Version": DUFFEL_API_VERSION,
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  };
+
+  // Merge additional headers if provided
+  if (additionalHeaders) {
+    Object.assign(headers, additionalHeaders);
+  }
+
+  // DEFENSIVE GUARD: Ensure Duffel-Version is always present
+  // This prevents accidental removal in future changes
+  if (!headers["Duffel-Version"]) {
+    throw new Error(
+      `[CANONICAL ERROR] Duffel-Version header is missing. ` +
+      `All Duffel API requests MUST include 'Duffel-Version: ${DUFFEL_API_VERSION}'. ` +
+      `This is a required header and cannot be omitted.`
+    );
+  }
+
+  // DEV-TIME GUARD: Validate that the version is v2 (required by Duffel API)
+  // This prevents accidental use of deprecated versions (v1, 2023-04-03, etc.)
+  if (headers["Duffel-Version"] !== DUFFEL_API_VERSION) {
+    throw new Error(
+      `[CANONICAL ERROR] Invalid Duffel-Version header. ` +
+      `Expected '${DUFFEL_API_VERSION}', but got '${headers["Duffel-Version"]}'. ` +
+      `Duffel v1 and date-based versions are deprecated. All requests MUST use v2. ` +
+      `Please use getDuffelHeaders() to ensure correct version.`
+    );
+  }
+
+  // Additional validation: Reject any deprecated version formats
+  const version = headers["Duffel-Version"];
+  if (version === "v1" || version?.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    throw new Error(
+      `[CANONICAL ERROR] Deprecated Duffel-Version detected: '${version}'. ` +
+      `Duffel v1 and date-based versions (e.g., 2023-04-03) are no longer supported. ` +
+      `All requests MUST use 'Duffel-Version: v2'.`
+    );
+  }
+
+  return headers;
+}
+
+/**
  * Get Duffel API access token
  * DOGMA 11: Duffel is the official API - validate credentials before use
+ * CANONICAL: Supports environment-based API keys (sandbox/production)
  */
+import { decryptSensitiveData, isEncrypted } from "./_core/security";
+
 export async function getDuffelToken(): Promise<string> {
-  const apiKey = process.env.DUFFEL_API_KEY;
+  const squareEnvironment = (process.env.SQUARE_ENVIRONMENT || "sandbox").toLowerCase();
+  const isProduction = squareEnvironment === "production";
+
+  // Try environment-specific keys first
+  let apiKey: string | undefined;
+  if (isProduction) {
+    apiKey = process.env.DUFFEL_API_KEY_PRODUCTION || process.env.DUFFEL_API_KEY;
+  } else {
+    apiKey = process.env.DUFFEL_API_KEY_SANDBOX || process.env.DUFFEL_API_KEY;
+  }
+
+  // DOGMA 1: Security First - Decrypt if encrypted
+  if (apiKey && isEncrypted(apiKey)) {
+    try {
+      apiKey = decryptSensitiveData(apiKey);
+    } catch (error: any) {
+      throw new Error(
+        `Failed to decrypt Duffel API key: ${error.message}. ` +
+        `Please check your ENCRYPTION_KEY configuration.`
+      );
+    }
+  }
+
+  // Validate key matches environment
+  if (apiKey) {
+    if (isProduction && apiKey.startsWith("duffel_test_")) {
+      throw new Error(
+        "Duffel API key mismatch: Production environment requires duffel_live_ key, but duffel_test_ key is configured."
+      );
+    }
+    if (!isProduction && apiKey.startsWith("duffel_live_")) {
+      // Warning but allow - user might want to test with live key
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          "[Duffel] Warning: Sandbox environment is using duffel_live_ key. Consider using duffel_test_ for testing."
+        );
+      }
+    }
+  }
 
   if (!apiKey) {
-    throw new Error("Duffel API credentials not configured");
+    const envName = isProduction ? "production" : "sandbox";
+    throw new Error(
+      `Duffel API credentials not configured for ${envName}. ` +
+      `Please set DUFFEL_API_KEY_${envName.toUpperCase()} or DUFFEL_API_KEY in your .env file.`
+    );
   }
 
   // Duffel uses API key directly, no OAuth token needed
@@ -130,6 +256,9 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
   }
 
   try {
+    // CANONICAL: Use centralized header function for all Duffel API requests
+    const headers = getDuffelHeaders(apiKey);
+
     // Create offer request
     const offerRequestResponse = await axios.post(
       `${DUFFEL_BASE_URL}/air/offer_requests`,
@@ -160,24 +289,17 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
         },
       },
       {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Duffel-Version": "v1",
-          "Content-Type": "application/json",
-        },
+        headers,
       }
     );
 
     const offerRequestId = offerRequestResponse.data.data.id;
 
-    // Get offers
+    // Get offers - use same canonical headers
     const offersResponse = await axios.get(
       `${DUFFEL_BASE_URL}/air/offers?offer_request_id=${offerRequestId}`,
       {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Duffel-Version": "v1",
-        },
+        headers,
       }
     );
 
@@ -188,15 +310,31 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightS
       },
     };
   } catch (error: any) {
-    // DOGMA 11: Tratamento explícito de erros
-    if (process.env.NODE_ENV === 'development') {
-      console.error("[Duffel API] Flight search error:", error.response?.data || error.message);
-    }
-    throw new Error(
+    // CANONICAL ERROR HANDLING: Preserve error context for proper categorization
+    // DOGMA 2: Structured logging with safe diagnostics (no secrets)
+    const errorContext = {
+      statusCode: error.response?.status,
+      errorType: error.constructor?.name || "Unknown",
+      hasResponse: !!error.response,
+      errorMessage: error.message,
+    };
+    
+    console.error("[Duffel API] Flight search error:", errorContext);
+
+    // Preserve original error structure for proper categorization in router
+    const enhancedError = new Error(
       error.response?.data?.errors?.[0]?.message || 
       error.response?.data?.errors?.[0]?.detail ||
+      error.message ||
       "Failed to search flights"
-    );
+    ) as Error & { response?: any; statusCode?: number; code?: string };
+    
+    // Attach response and status code for proper error categorization
+    enhancedError.response = error.response;
+    enhancedError.statusCode = error.response?.status;
+    enhancedError.code = error.code; // Network error codes (ECONNREFUSED, etc.)
+    
+    throw enhancedError;
   }
 }
 
@@ -388,6 +526,126 @@ export function formatDuration(isoDuration: string): string {
     return `${hours}h`;
   } else {
     return `${minutes}m`;
+  }
+}
+
+// Order Creation Types - DOGMA 11: Duffel API v2 structure
+export interface PassengerDetail {
+  type: "adult" | "child" | "infant";
+  given_name: string;
+  family_name: string;
+  born_on?: string; // YYYY-MM-DD
+  gender?: "m" | "f";
+  title?: "mr" | "ms" | "mrs" | "miss";
+  email?: string;
+  phone_number?: string;
+  identity_documents?: Array<{
+    type: "passport" | "identity_card" | "driving_licence";
+    unique_identifier?: string;
+    issuing_country_code?: string;
+    expires_on?: string; // YYYY-MM-DD
+  }>;
+}
+
+export interface CreateOrderParams {
+  offerId: string;
+  passengers: PassengerDetail[];
+  services?: Array<{
+    id: string;
+    quantity: number;
+  }>;
+}
+
+export interface DuffelOrder {
+  id: string;
+  offer_id: string;
+  status: string;
+  total_amount: string;
+  total_currency: string;
+  slices: DuffelSlice[];
+  passengers: Array<{
+    id: string;
+    type: string;
+    given_name: string;
+    family_name: string;
+  }>;
+  created_at: string;
+}
+
+export interface CreateOrderResponse {
+  data: DuffelOrder;
+}
+
+/**
+ * Create a flight order using Duffel API v2
+ * DOGMA 11: Duffel is the canonical API - validate credentials before use
+ */
+export async function createOrder(params: CreateOrderParams): Promise<DuffelOrder> {
+  const apiKey = process.env.DUFFEL_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("Flight order API is not configured. Please configure DUFFEL_API_KEY in your .env file.");
+  }
+
+  try {
+    const headers = getDuffelHeaders(apiKey);
+
+    const orderResponse = await axios.post<CreateOrderResponse>(
+      `${DUFFEL_BASE_URL}/air/orders`,
+      {
+        data: {
+          selected_offers: [params.offerId],
+          passengers: params.passengers.map(p => ({
+            type: p.type,
+            given_name: p.given_name,
+            family_name: p.family_name,
+            ...(p.born_on && { born_on: p.born_on }),
+            ...(p.gender && { gender: p.gender }),
+            ...(p.title && { title: p.title }),
+            ...(p.email && { email: p.email }),
+            ...(p.phone_number && { phone_number: p.phone_number }),
+            ...(p.identity_documents && p.identity_documents.length > 0 && {
+              identity_documents: p.identity_documents.map(doc => ({
+                type: doc.type,
+                ...(doc.unique_identifier && { unique_identifier: doc.unique_identifier }),
+                ...(doc.issuing_country_code && { issuing_country_code: doc.issuing_country_code }),
+                ...(doc.expires_on && { expires_on: doc.expires_on }),
+              })),
+            }),
+          })),
+          ...(params.services && params.services.length > 0 && {
+            services: params.services,
+          }),
+        },
+      },
+      {
+        headers,
+      }
+    );
+
+    return orderResponse.data.data;
+  } catch (error: any) {
+    const errorContext = {
+      statusCode: error.response?.status,
+      errorType: error.constructor?.name || "Unknown",
+      hasResponse: !!error.response,
+      errorMessage: error.message,
+    };
+    
+    console.error("[Duffel API] Order creation error:", errorContext);
+
+    const enhancedError = new Error(
+      error.response?.data?.errors?.[0]?.message || 
+      error.response?.data?.errors?.[0]?.detail ||
+      error.message ||
+      "Failed to create order"
+    ) as Error & { response?: any; statusCode?: number; code?: string };
+    
+    enhancedError.response = error.response;
+    enhancedError.statusCode = error.response?.status;
+    enhancedError.code = error.code;
+    
+    throw enhancedError;
   }
 }
 

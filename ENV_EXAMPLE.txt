@@ -56,3 +56,25 @@ DUFFEL_API_KEY=sua-duffel-api-key-aqui
 # VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
 # STRIPE_WEBHOOK_SECRET=whsec_...
 
+# Square Payment Configuration (OBRIGATÓRIO - para pagamentos no checkout)
+# Obtenha em: https://developer.squareup.com/apps
+# 1. Acesse o portal do desenvolvedor Square
+# 2. Selecione sua aplicação
+# 3. Vá em "Credentials"
+# 4. Copie o Access Token e Application ID
+
+# Ambiente ativo: "sandbox" ou "production" (padrão: "sandbox")
+SQUARE_ENVIRONMENT=sandbox
+
+# Credenciais Sandbox (para testes)
+SQUARE_ACCESS_TOKEN_SANDBOX=seu_sandbox_access_token_aqui
+SQUARE_APPLICATION_ID_SANDBOX=seu_sandbox_application_id_aqui
+
+# Credenciais Production (para produção)
+# SQUARE_ACCESS_TOKEN_PRODUCTION=seu_production_access_token_aqui
+# SQUARE_APPLICATION_ID_PRODUCTION=seu_production_application_id_aqui
+
+# Compatibilidade com versões antigas (opcional - use se não tiver variáveis específicas)
+# SQUARE_ACCESS_TOKEN=seu_access_token_aqui
+# SQUARE_APPLICATION_ID=seu_application_id_aqui
+

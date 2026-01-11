@@ -209,10 +209,20 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () =>
-  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
+const resolveApiUrl = () => {
+  // If custom URL is provided, use it
+  if (ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0) {
+    return `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`;
+  }
+  
+  // If API key starts with "sk-", it's an OpenAI key - use OpenAI API
+  if (ENV.forgeApiKey && ENV.forgeApiKey.startsWith("sk-")) {
+    return "https://api.openai.com/v1/chat/completions";
+  }
+  
+  // Default to Forge API
+  return "https://forge.manus.im/v1/chat/completions";
+};
 
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {
@@ -279,13 +289,31 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     response_format,
   } = params;
 
+  // Detect if using OpenAI API (key starts with "sk-")
+  const isOpenAI = ENV.forgeApiKey && ENV.forgeApiKey.startsWith("sk-");
+  // Use gpt-3.5-turbo as it's more widely available
+  const model = isOpenAI ? "gpt-3.5-turbo" : "gemini-2.5-flash";
+
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model,
     messages: messages.map(normalizeMessage),
   };
 
+  // OpenAI uses 'tools' format, but we need to ensure compatibility
   if (tools && tools.length > 0) {
-    payload.tools = tools;
+    if (isOpenAI) {
+      // OpenAI format - ensure tools are in correct format
+      payload.tools = tools.map((tool) => ({
+        type: "function",
+        function: {
+          name: tool.function.name,
+          description: tool.function.description || "",
+          parameters: tool.function.parameters || {},
+        },
+      }));
+    } else {
+      payload.tools = tools;
+    }
   }
 
   const normalizedToolChoice = normalizeToolChoice(
@@ -293,12 +321,30 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     tools
   );
   if (normalizedToolChoice) {
-    payload.tool_choice = normalizedToolChoice;
+    // OpenAI uses 'tool_choice' but format might differ
+    if (isOpenAI) {
+      if (normalizedToolChoice === "auto" || normalizedToolChoice === "none") {
+        payload.tool_choice = normalizedToolChoice;
+      } else if (typeof normalizedToolChoice === "object" && "function" in normalizedToolChoice) {
+        payload.tool_choice = {
+          type: "function",
+          function: {
+            name: normalizedToolChoice.function.name,
+          },
+        };
+      }
+    } else {
+      payload.tool_choice = normalizedToolChoice;
+    }
   }
 
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
+  payload.max_tokens = 32768;
+  
+  // Only add thinking parameter for non-OpenAI APIs
+  if (!isOpenAI) {
+    payload.thinking = {
+      "budget_tokens": 128
+    };
   }
 
   const normalizedResponseFormat = normalizeResponseFormat({
@@ -312,7 +358,18 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.response_format = normalizedResponseFormat;
   }
 
-  const response = await fetch(resolveApiUrl(), {
+  const apiUrl = resolveApiUrl();
+  
+  // Log request for debugging (without sensitive data)
+  console.log("LLM Request:", {
+    url: apiUrl,
+    model,
+    isOpenAI,
+    hasTools: !!(tools && tools.length > 0),
+    messageCount: messages.length,
+  });
+
+  const response = await fetch(apiUrl, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -323,10 +380,35 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error("LLM API Error:", {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorText,
+      url: apiUrl,
+      model,
+      isOpenAI,
+    });
+    
+    // Provide more helpful error messages
+    if (response.status === 401) {
+      throw new Error("API key inválida ou expirada. Verifique sua chave da OpenAI no arquivo .env");
+    } else if (response.status === 429) {
+      throw new Error("Limite de requisições excedido. Tente novamente em alguns instantes.");
+    } else if (response.status === 404) {
+      throw new Error(`Modelo '${model}' não encontrado. Verifique se o modelo está disponível.`);
+    }
+    
     throw new Error(
       `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
     );
   }
 
-  return (await response.json()) as InvokeResult;
+  const result = (await response.json()) as InvokeResult;
+  console.log("LLM Response:", {
+    hasChoices: !!result.choices,
+    choiceCount: result.choices?.length || 0,
+    hasToolCalls: !!result.choices?.[0]?.message?.tool_calls,
+  });
+  
+  return result;
 }

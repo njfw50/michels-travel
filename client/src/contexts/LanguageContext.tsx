@@ -17,6 +17,7 @@ export const translations: Translations = {
   "nav.about": { en: "About Us", pt: "Sobre Nós", es: "Sobre Nosotros" },
   "nav.services": { en: "Services", pt: "Serviços", es: "Servicios" },
   "nav.contact": { en: "Contact", pt: "Contato", es: "Contacto" },
+  "nav.login": { en: "Login", pt: "Entrar", es: "Iniciar Sesión" },
 
   // Hero Section
   "hero.title": { en: "Your Journey Begins Here", pt: "Sua Jornada Começa Aqui", es: "Tu Viaje Comienza Aquí" },
