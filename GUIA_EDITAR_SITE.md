@@ -1,106 +1,105 @@
-# 📝 Guia: Arquivos para Editar o Site
+# 📝 Guide: Files to Edit the Site
 
-## 🎯 Arquivos Principais para Começar
+## 🎯 Main Files to Start
 
-### 1. **Página Principal (Home)**
+### 1. **Main Page (Home)**
 📍 `client/src/pages/Home.tsx`
-- **O que é**: Página inicial do site
-- **O que você pode editar**: Conteúdo, layout, seções, textos
-- **Abrir este arquivo primeiro!**
+- **What it is**: The site's landing page
+- **What you can edit**: Content, layout, sections, text
+- **Open this file first!**
 
-### 2. **Arquivo Principal da Aplicação**
+### 2. **Main Application File**
 📍 `client/src/App.tsx`
-- **O que é**: Configuração de rotas e estrutura principal
-- **O que você pode editar**: Rotas, navegação, tema padrão
+- **What it is**: Route configuration and main structure
+- **What you can edit**: Routes, navigation, default theme
 
-### 3. **Componentes Principais**
+### 3. **Main Components**
 
-#### Busca de Voos
+#### Flight Search
 📍 `client/src/components/FlightSearch.tsx`
-- Formulário de busca de voos
+- Flight search form
 
 📍 `client/src/components/FlightCard.tsx`
-- Card que exibe resultados de voos
+- Card displaying flight results
 
 📍 `client/src/components/FlightFilters.tsx`
-- Filtros para resultados de voos
+- Filters for flight results
 
-#### Formulários
+#### Forms
 📍 `client/src/components/BookingForm.tsx`
-- Formulário de reserva
+- Booking form
 
 #### Chatbot
 📍 `client/src/components/TravelChatbot.tsx`
-- Chatbot de viagens com IA
+- AI travel chatbot
 
-#### Outros Componentes
-📍 `client/src/components/AirportSearch.tsx` - Busca de aeroportos
-📍 `client/src/components/Map.tsx` - Mapa
-📍 `client/src/components/LanguageSelector.tsx` - Seletor de idioma
+#### Other Components
+📍 `client/src/components/AirportSearch.tsx` - Airport search
+📍 `client/src/components/Map.tsx` - Map
+📍 `client/src/components/LanguageSelector.tsx` - Language selector
 
-### 4. **Estilos e Tema**
+### 4. **Styles and Theme**
 📍 `client/src/index.css`
-- Estilos globais, cores, tema
+- Global styles, colors, theme
 
 📍 `client/src/contexts/ThemeContext.tsx`
-- Configuração de tema (claro/escuro)
+- Theme configuration (light/dark)
 
-### 5. **Traduções e Idiomas**
+### 5. **Translations and Languages**
 📍 `client/src/contexts/LanguageContext.tsx`
-- Sistema de idiomas (PT, EN, ES)
+- Language system (PT, EN, ES)
 
 📍 `client/src/const.ts`
-- Constantes e textos traduzidos
+- Constants and translated text
 
-## 🗂️ Estrutura de Pastas
+## 🗂️ Folder Structure
 
 ```
 client/src/
-├── pages/              ← PÁGINAS (comece aqui!)
-│   ├── Home.tsx       ← Página inicial
-│   └── NotFound.tsx   ← Página 404
+├── pages/              ← PAGES (start here!)
+│   ├── Home.tsx       ← Home page
+│   └── NotFound.tsx   ← 404 page
 │
-├── components/         ← COMPONENTES
+├── components/         ← COMPONENTS
 │   ├── FlightSearch.tsx
 │   ├── FlightCard.tsx
 │   ├── BookingForm.tsx
-│   └── ui/            ← Componentes de UI (botões, cards, etc.)
+│   └── ui/            ← UI components (buttons, cards, etc.)
 │
-├── contexts/          ← CONTEXTOS (tema, idioma)
-├── hooks/            ← HOOKS personalizados
-├── lib/              ← BIBLIOTECAS (trpc, utils)
-└── App.tsx           ← ARQUIVO PRINCIPAL
+├── contexts/          ← CONTEXTS (theme, language)
+├── hooks/            ← Custom HOOKS
+├── lib/              ← LIBRARIES (trpc, utils)
+└── App.tsx           ← MAIN FILE
 ```
 
-## 🚀 Por Onde Começar?
+## 🚀 Where to Start?
 
-### Para editar a página inicial:
-1. Abra: `client/src/pages/Home.tsx`
-2. Este é o arquivo mais importante!
+### To edit the home page:
+1. Open: `client/src/pages/Home.tsx`
+2. This is the most important file!
 
-### Para editar componentes:
-1. Abra: `client/src/components/[NomeDoComponente].tsx`
-2. Exemplo: `FlightSearch.tsx` para editar busca de voos
+### To edit components:
+1. Open: `client/src/components/[ComponentName].tsx`
+2. Example: `FlightSearch.tsx` to edit flight search
 
-### Para editar estilos:
-1. Abra: `client/src/index.css`
-2. Ou edite os estilos inline nos componentes
+### To edit styles:
+1. Open: `client/src/index.css`
+2. Or edit inline styles in components
 
-## 💡 Dicas
+## 💡 Tips
 
-- **Use Ctrl+P** no Cursor para buscar arquivos rapidamente
-- **Componentes UI** estão em `client/src/components/ui/`
-- **Backend** está em `server/` (se precisar editar APIs)
+- **Use Ctrl+P** in Cursor to find files quickly
+- **UI Components** are in `client/src/components/ui/`
+- **Backend** is in `server/` (if you need to edit APIs)
 
-## 📋 Checklist de Arquivos Importantes
+## 📋 Checklist of Important Files
 
-- [ ] `client/src/pages/Home.tsx` - Página principal
-- [ ] `client/src/App.tsx` - Configuração de rotas
-- [ ] `client/src/components/FlightSearch.tsx` - Busca de voos
-- [ ] `client/src/index.css` - Estilos globais
-- [ ] `client/src/const.ts` - Textos e constantes
+- [ ] `client/src/pages/Home.tsx` - Main page
+- [ ] `client/src/App.tsx` - Route configuration
+- [ ] `client/src/components/FlightSearch.tsx` - Flight search
+- [ ] `client/src/index.css` - Global styles
+- [ ] `client/src/const.ts` - Text and constants
 
 ---
 
-**💡 Dica**: Comece sempre pelo arquivo `Home.tsx` - é a página principal do site!
-
+**💡 Tip**: Always start with the `Home.tsx` file - it's the site's main page!

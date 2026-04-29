@@ -28,7 +28,7 @@ export default function Login() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async (data) => {
-      toast.success("Login realizado com sucesso!");
+      toast.success("Login successful!");
       // DOGMA 2: Wait for refresh to complete before navigating
       await refresh();
       // Small delay to ensure state is updated
@@ -42,13 +42,13 @@ export default function Login() {
       }, 100);
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao fazer login");
+      toast.error(error.message || "Error during login");
     },
   });
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async (data) => {
-      toast.success("Conta criada com sucesso!");
+      toast.success("Account created successfully!");
       // DOGMA 2: Wait for refresh to complete before navigating
       await refresh();
       // Small delay to ensure state is updated
@@ -62,14 +62,14 @@ export default function Login() {
       }, 100);
     },
     onError: (error) => {
-      toast.error(error.message || "Erro ao criar conta");
+      toast.error(error.message || "Error creating account");
     },
   });
 
   const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos");
+      toast.error("Please fill in all fields");
       return;
     }
     loginMutation.mutate({ email, password });
@@ -78,11 +78,11 @@ export default function Login() {
   const handleEmailRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
-      toast.error("Por favor, preencha todos os campos");
+      toast.error("Please fill in all fields");
       return;
     }
     if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+      toast.error("Password must be at least 6 characters");
       return;
     }
     registerMutation.mutate({ name, email, password });
@@ -109,7 +109,7 @@ export default function Login() {
             <Logo variant="default" showTagline={true} />
           </div>
           <CardDescription className="mt-2">
-            {isRegistering ? "Criar nova conta" : "Faça login para continuar"}
+            {isRegistering ? "Create a new account" : "Login to continue"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -121,11 +121,11 @@ export default function Login() {
             >
               {isRegistering && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
+                  <Label htmlFor="name">Name</Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Seu nome completo"
+                    placeholder="Your full name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isLoading}
@@ -135,13 +135,13 @@ export default function Login() {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email ou Usuário</Label>
+                <Label htmlFor="email">Email or Username</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="text"
-                    placeholder="seu@email.com ou admin"
+                    placeholder="your@email.com or admin"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
@@ -152,13 +152,13 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder={isRegistering ? "Mínimo 6 caracteres" : "Sua senha"}
+                    placeholder={isRegistering ? "Minimum 6 characters" : "Your password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
@@ -177,12 +177,12 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {isRegistering ? "Criando conta..." : "Entrando..."}
+                    {isRegistering ? "Creating account..." : "Logging in..."}
                   </>
                 ) : (
                   <>
                     <Plane className="h-4 w-4 mr-2" />
-                    {isRegistering ? "Criar conta" : "Entrar"}
+                    {isRegistering ? "Create account" : "Login"}
                   </>
                 )}
               </Button>
@@ -199,8 +199,8 @@ export default function Login() {
                   className="text-sm"
                 >
                   {isRegistering
-                    ? "Já tem uma conta? Faça login"
-                    : "Não tem uma conta? Criar conta"}
+                    ? "Already have an account? Login"
+                    : "Don't have an account? Create account"}
                 </Button>
               </div>
             </form>
@@ -215,7 +215,7 @@ export default function Login() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-white px-2 text-muted-foreground">
-                    Ou continue com
+                    Or continue with
                   </span>
                 </div>
               </div>
@@ -230,12 +230,12 @@ export default function Login() {
                 {isRedirecting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Redirecionando...
+                    Redirecting...
                   </>
                 ) : (
                   <>
                     <Plane className="h-4 w-4 mr-2" />
-                    Entrar com Manus OAuth
+                    Login with Manus OAuth
                   </>
                 )}
               </Button>
@@ -247,7 +247,7 @@ export default function Login() {
           <div className="pt-4 border-t">
             <Link href="/">
               <Button variant="ghost" className="w-full" disabled={isLoading}>
-                Voltar para a página inicial
+                Back to home page
               </Button>
             </Link>
           </div>

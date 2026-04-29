@@ -1,52 +1,51 @@
-# Prompt para Manus - Configuração do Projeto
+# Prompt for Manus - Project Configuration
 
 ```
-Você está trabalhando no projeto Michel's Travel, um sistema completo de busca e reserva de voos.
+You are working on the Michel's Travel project, a complete flight search and booking system.
 
-## Repositório Git
+## Git Repository
 - URL: https://github.com/njfw50/michels-travel.git
 - Branch: main
 - Remote: origin → https://github.com/njfw50/michels-travel.git
-- Status: Sincronizado e funcionando
+- Status: Synchronized and working
 
-## Configuração Atual
-- Git inicializado e configurado corretamente
-- Remote 'origin' apontando para GitHub
-- Branch 'main' rastreando 'origin/main'
-- Todos os commits estão no GitHub
+## Current Configuration
+- Git initialized and configured correctly
+- Remote 'origin' pointing to GitHub
+- Branch 'main' tracking 'origin/main'
+- All commits are on GitHub
 
-## Estrutura do Projeto
-- Frontend: React 19 + TypeScript + Vite (em /client)
-- Backend: Node.js + Express + tRPC (em /server)
-- Banco: MySQL via Drizzle ORM
-- Estilização: Tailwind CSS
-- Gerenciador: pnpm
+## Project Structure
+- Frontend: React 19 + TypeScript + Vite (in /client)
+- Backend: Node.js + Express + tRPC (in /server)
+- Database: MySQL via Drizzle ORM
+- Styling: Tailwind CSS
+- Manager: pnpm
 
-## Integração Manus
-- Plugin: vite-plugin-manus-runtime@^0.0.57 (instalado)
-- Domínios permitidos: .manus.computer, .manuspre.computer, etc.
-- OAuth configurado para autenticação Manus
-- Componentes Manus presentes no código
+## Manus Integration
+- Plugin: vite-plugin-manus-runtime@^0.0.57 (installed)
+- Allowed domains: .manus.computer, .manuspre.computer, etc.
+- OAuth configured for Manus authentication
+- Manus components present in the code
 
-## Comandos Essenciais
-- Instalar: pnpm install
-- Desenvolvimento: pnpm dev
+## Essential Commands
+- Install: pnpm install
+- Development: pnpm dev
 - Build: pnpm build
-- Testes: pnpm test
+- Test: pnpm test
 
-## Fluxo Git
-1. git pull origin main (antes de trabalhar)
-2. Fazer mudanças
+## Git Flow
+1. git pull origin main (before working)
+2. Make changes
 3. git add .
-4. git commit -m "mensagem"
+4. git commit -m "message"
 5. git push origin main
 
-## Importante
-- NÃO commitar arquivos .env ou credenciais
-- Sempre fazer pull antes de começar
-- Usar mensagens de commit descritivas
-- O projeto está totalmente funcional e sincronizado
+## Important
+- DO NOT commit .env files or credentials
+- Always pull before starting
+- Use descriptive commit messages
+- The project is fully functional and synchronized
 
-Você pode trabalhar normalmente neste projeto. Todos os arquivos estão versionados e o repositório está configurado corretamente.
+You can work normally on this project. All files are versioned and the repository is correctly configured.
 ```
-
