@@ -98,7 +98,7 @@ function mostrarResultado(lead) {
   const res = lead.result || {};
   statusResult.innerHTML = `
     <h2>✈️ Sua cotação</h2>
-    <div class="result-price">${escapeHtml(res.preco_total || '—'}</div>
+    <div class="result-price">${escapeHtml(res.preco_total || '—')}</div>
     <div class="result-box">${escapeHtml(res.texto || 'Cotação pronta!')}</div>
     <p class="fine">Valores verificados agora no sistema da agência. Sujeitos a disponibilidade.</p>
     <button class="btn-buy" id="btn-buy">Quero comprar ✅</button>
