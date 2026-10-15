@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Michel's Travel — Opção Eficiente | Passagens Brasil ⇄ EUA</title>
+<meta name="description" content="Cotação de passagens aéreas Brasil ⇄ Estados Unidos com atendimento em português, inglês e espanhol. Fale com a Michel's Travel.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <img src="assets/logo.jpg" alt="Michel's Travel — Opção Eficiente" class="logo">
+  <a class="btn-whats" href="https://wa.me/18623501161?text=Ol%C3%A1!%20Quero%20uma%20cota%C3%A7%C3%A3o%20de%20voo%20com%20a%20Michel's%20Travel." target="_blank" rel="noopener">WhatsApp</a>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <h1>A viagem que você deseja, com o suporte mais inteligente e eficiente.</h1>
+    <p class="sub">Cruzeiros, pacotes e roteiros personalizados — atendimento em português, inglês e espanhol.</p>
+    <div class="steps">
+      <div class="step"><span>1</span>Preencha a busca abaixo</div>
+      <div class="step"><span>2</span>Consultamos as tarifas no sistema da agência</div>
+      <div class="step"><span>3</span>Você recebe a cotação aqui mesmo na tela</div>
+    </div>
+  </section>
+
+  <!-- FORM -->
+  <section class="card" id="busca-card">
+    <h2>🔎 Buscar voo</h2>
+    <form id="flight-form" autocomplete="off">
+      <div class="grid2">
+        <label>Seu nome
+          <input type="text" id="nome" required placeholder="Como podemos te chamar?">
+        </label>
+        <label>Seu WhatsApp
+          <input type="tel" id="whatsapp" required placeholder="(862) 350-1161">
+        </label>
+      </div>
+      <div class="grid2">
+        <label>Origem
+          <input type="text" id="origem" required placeholder="Ex: Newark (EWR)">
+        </label>
+        <label>Destino
+          <input type="text" id="destino" required placeholder="Ex: São Paulo (GRU)">
+        </label>
+      </div>
+      <div class="grid2">
+        <label>Ida
+          <input type="date" id="ida" required>
+        </label>
+        <label>Volta
+          <input type="date" id="volta">
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="so_ida"> Somente ida</label>
+      <div class="grid2">
+        <label>Adultos (12+)
+          <input type="number" id="adultos" min="1" max="9" value="1" required>
+        </label>
+        <label>Crianças (0–11)
+          <input type="number" id="criancas" min="0" max="8" value="0">
+        </label>
+      </div>
+      <div id="idades-criancas"></div>
+      <button type="submit" class="btn-primary">Consultar tarifa ✈️</button>
+      <p class="fine">Sem cadastro, sem spam. Usamos seus dados só para fazer a cotação.</p>
+    </form>
+  </section>
+
+  <!-- STATUS / RESULT -->
+  <section class="card hidden" id="status-card">
+    <div id="status-loading">
+      <div class="spinner"></div>
+      <h2>Consultando as tarifas…</h2>
+      <p>Estamos verificando os melhores preços no sistema da agência.<br>Isso leva alguns minutinhos — não feche esta página. ☕</p>
+    </div>
+    <div id="status-result" class="hidden"></div>
+  </section>
+</main>
+
+<footer>
+  <p><strong>Michel's Travel — Opção Eficiente</strong></p>
+  <p>📲 WhatsApp: (862) 350-1161 · ✉️ michelstravelus@gmail.com</p>
+  <p class="fine">Preços sujeitos a disponibilidade e confirmação no momento da reserva.</p>
+</footer>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
