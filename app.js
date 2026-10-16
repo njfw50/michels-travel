@@ -13,6 +13,20 @@ const soIda = document.getElementById('so_ida');
 const voltaInput = document.getElementById('volta');
 
 let pollTimer = null;
+
+// Tema claro/escuro (estilo Facebook) — persiste a escolha
+const btnTheme = document.getElementById('btn-theme');
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('mt-theme', t); } catch (e) {}
+  if (btnTheme) btnTheme.textContent = t === 'dark' ? '☀️' : '🌙';
+}
+if (btnTheme) {
+  btnTheme.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+  btnTheme.addEventListener('click', () => {
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+}
 let leadId = null;
 
 // Campos de idade das crianças (dinâmico)

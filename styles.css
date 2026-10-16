@@ -1,65 +1,74 @@
-/* Michel's Travel — visual Facebook (extensão do Facebook) */
+/* Michel's Travel — visual Facebook (claro + escuro) */
 :root{
-  --fb-blue:#1877F2; --fb-blue-hover:#166FE5; --fb-bg:#f0f2f5;
-  --fb-card:#ffffff; --fb-text:#050505; --fb-secondary:#65676B;
-  --fb-border:#ccd0d5; --fb-input:#f0f2f5; --fb-green:#42b883;
-  --wa-green:#25D366;
+  --blue:#1877F2; --blue-hover:#166FE5;
+  --bg:#f0f2f5; --card:#ffffff; --text:#050505; --secondary:#65676B;
+  --border:#ccd0d5; --input-bg:#f0f2f5; --divider:#dddfe2;
+  --wa-green:#25D366; --shadow:0 1px 2px rgba(0,0,0,.10);
+}
+[data-theme="dark"]{
+  --blue:#2d88ff; --blue-hover:#4595ff;
+  --bg:#18191a; --card:#242526; --text:#e4e6eb; --secondary:#b0b3b8;
+  --border:#3e4042; --input-bg:#3a3b3c; --divider:#3e4042;
+  --shadow:0 1px 2px rgba(0,0,0,.40);
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--fb-bg); color:var(--fb-text); line-height:1.5;}
-.topbar{display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:var(--fb-card); box-shadow:0 1px 4px rgba(0,0,0,.1); position:sticky; top:0; z-index:10;}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.5;}
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:var(--card); box-shadow:var(--shadow); position:sticky; top:0; z-index:10;}
+.topbar-actions{display:flex; align-items:center; gap:8px;}
 .logo{height:44px; width:44px; border-radius:50%; object-fit:cover;}
 .btn-whats{background:var(--wa-green); color:#fff; text-decoration:none; font-weight:600; padding:8px 16px; border-radius:6px; font-size:.95rem;}
-.hero{background:var(--fb-card); text-align:center; padding:32px 20px 28px; border-bottom:1px solid #dddfe2;}
-.hero h1{font-size:1.5rem; max-width:640px; margin:0 auto 8px; color:var(--fb-text);}
-.hero .sub{color:var(--fb-secondary); max-width:560px; margin:0 auto 20px; font-size:.95rem;}
+.btn-theme{background:var(--input-bg); color:var(--text); border:none; border-radius:50%; width:38px; height:38px; font-size:1.15rem; cursor:pointer; line-height:1;}
+.hero{background:var(--card); text-align:center; padding:32px 20px 28px; border-bottom:1px solid var(--divider);}
+.hero h1{font-size:1.5rem; max-width:640px; margin:0 auto 8px; color:var(--text);}
+.hero .sub{color:var(--secondary); max-width:560px; margin:0 auto 20px; font-size:.95rem;}
 .steps{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
-.step{background:var(--fb-bg); border-radius:8px; padding:10px 14px; max-width:220px; font-size:.88rem; color:var(--fb-text);}
-.step span{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--fb-blue); color:#fff; font-weight:700; font-size:.8rem; margin-right:8px;}
+.step{background:var(--bg); border-radius:8px; padding:10px 14px; max-width:220px; font-size:.88rem; color:var(--text);}
+.step span{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--blue); color:#fff; font-weight:700; font-size:.8rem; margin-right:8px;}
 main{max-width:640px; margin:0 auto; padding:16px 16px 32px;}
-.card{background:var(--fb-card); border-radius:8px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,.10); margin-top:12px;}
-.card h2{margin-bottom:14px; color:var(--fb-text); font-size:1.2rem;}
+.card{background:var(--card); border-radius:8px; padding:20px; box-shadow:var(--shadow); margin-top:12px;}
+.card h2{margin-bottom:14px; color:var(--text); font-size:1.2rem;}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-label{display:block; font-weight:600; font-size:.88rem; margin-bottom:10px; color:var(--fb-text);}
-input[type=text],input[type=tel],input[type=date],input[type=number]{width:100%; margin-top:5px; padding:11px 12px; border:1px solid var(--fb-border); border-radius:6px; font-size:1rem; background:var(--fb-input); color:var(--fb-text);}
-input:focus{outline:none; border-color:var(--fb-blue); background:#fff;}
+label{display:block; font-weight:600; font-size:.88rem; margin-bottom:10px; color:var(--text);}
+input[type=text],input[type=tel],input[type=date],input[type=number]{width:100%; margin-top:5px; padding:11px 12px; border:1px solid var(--border); border-radius:6px; font-size:1rem; background:var(--input-bg); color:var(--text); color-scheme:light;}
+[data-theme="dark"] input[type=text],[data-theme="dark"] input[type=tel],[data-theme="dark"] input[type=date],[data-theme="dark"] input[type=number]{color-scheme:dark;}
+input:focus{outline:none; border-color:var(--blue); background:var(--card);}
 .check{display:flex; align-items:center; gap:8px; font-weight:600; font-size:.9rem;}
 .check input{width:18px; height:18px;}
-.btn-primary{width:100%; margin-top:8px; padding:12px; border:none; border-radius:6px; background:var(--fb-blue); color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer;}
-.btn-primary:hover{background:var(--fb-blue-hover);}
+.btn-primary{width:100%; margin-top:8px; padding:12px; border:none; border-radius:6px; background:var(--blue); color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer;}
+.btn-primary:hover{background:var(--blue-hover);}
 .btn-primary:disabled{opacity:.6; cursor:wait;}
-.fine{font-size:.78rem; color:var(--fb-secondary); margin-top:10px; text-align:center;}
+.fine{font-size:.78rem; color:var(--secondary); margin-top:10px; text-align:center;}
 .hidden{display:none !important;}
 #status-loading{text-align:center; padding:20px 0;}
-.spinner{width:44px; height:44px; margin:0 auto 14px; border:4px solid #dddfe2; border-top-color:var(--fb-blue); border-radius:50%; animation:girar 1s linear infinite;}
+.spinner{width:44px; height:44px; margin:0 auto 14px; border:4px solid var(--divider); border-top-color:var(--blue); border-radius:50%; animation:girar 1s linear infinite;}
 @keyframes girar{to{transform:rotate(360deg);}}
-#status-result{background:var(--fb-bg); border-radius:8px; padding:12px; margin:0 -8px;}
-#status-result h2{color:var(--fb-text); font-size:1.2rem; margin-bottom:8px;}
+#status-result{background:var(--bg); border-radius:8px; padding:12px; margin:0 -8px;}
+#status-result h2{color:var(--text); font-size:1.2rem; margin-bottom:8px;}
 /* Cards da cotação — visual Facebook, compacto */
 .quote-head{text-align:center; margin-bottom:10px;}
-.quote-route{font-weight:700; font-size:1rem; color:#050505;}
-.quote-price{font-size:1.8rem; font-weight:800; color:#1877F2; margin:2px 0;}
-.quote-cia{color:#65676B; font-size:.85rem;}
-.flight-card{background:#fff; border-radius:8px; padding:10px 12px; margin:8px 0; box-shadow:0 1px 2px rgba(0,0,0,.10);}
-.flight-tipo{font-weight:700; color:#050505; margin-bottom:6px; font-size:.85rem;}
-.flight-data{color:#65676B; font-weight:400;}
+.quote-route{font-weight:700; font-size:1rem; color:var(--text);}
+.quote-price{font-size:1.8rem; font-weight:800; color:var(--blue); margin:2px 0;}
+.quote-cia{color:var(--secondary); font-size:.85rem;}
+.flight-card{background:var(--card); border-radius:8px; padding:10px 12px; margin:8px 0; box-shadow:var(--shadow);}
+.flight-tipo{font-weight:700; color:var(--text); margin-bottom:6px; font-size:.85rem;}
+.flight-data{color:var(--secondary); font-weight:400;}
 .flight-main{display:flex; align-items:center; justify-content:space-between; gap:6px;}
 .flight-airport{text-align:center; min-width:64px;}
-.flight-code{display:block; font-size:1.15rem; font-weight:700; color:#050505;}
-.flight-time{display:block; color:#65676B; font-size:.8rem;}
+.flight-code{display:block; font-size:1.15rem; font-weight:700; color:var(--text);}
+.flight-time{display:block; color:var(--secondary); font-size:.8rem;}
 .flight-line{flex:1; text-align:center; padding:0 4px;}
-.flight-dur{display:block; font-size:.72rem; color:#65676B;}
-.flight-bar{display:block; height:2px; background:#ccd0d5; margin:4px 0; position:relative;}
-.flight-bar::after{content:"✈"; position:absolute; top:-10px; left:50%; transform:translateX(-50%); color:#1877F2; font-size:.8rem;}
-.flight-stops{display:block; font-size:.72rem; color:#65676B;}
-.quote-info{display:flex; gap:8px; align-items:flex-start; background:#fff; border-radius:8px; padding:8px 10px; margin:8px 0; font-size:.82rem; box-shadow:0 1px 2px rgba(0,0,0,.10);}
+.flight-dur{display:block; font-size:.72rem; color:var(--secondary);}
+.flight-bar{display:block; height:2px; background:var(--border); margin:4px 0; position:relative;}
+.flight-bar::after{content:"✈"; position:absolute; top:-10px; left:50%; transform:translateX(-50%); color:var(--blue); font-size:.8rem;}
+.flight-stops{display:block; font-size:.72rem; color:var(--secondary);}
+.quote-info{display:flex; gap:8px; align-items:flex-start; background:var(--card); border-radius:8px; padding:8px 10px; margin:8px 0; font-size:.82rem; box-shadow:var(--shadow);}
 .quote-ico{font-size:1.1rem;}
-#status-result .btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:#1877F2; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
-#status-result .btn-buy:hover{background:#166FE5;}
-#status-result .btn-ghost{width:100%; padding:10px; border:1px solid var(--fb-border); border-radius:6px; background:#fff; color:var(--fb-text); font-weight:600; cursor:pointer; margin-top:8px;}
-.btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:#1877F2; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
-.btn-ghost{width:100%; padding:10px; border:1px solid var(--fb-border); border-radius:6px; background:#fff; color:var(--fb-text); font-weight:600; cursor:pointer; margin-top:8px;}
+#status-result .btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:var(--blue); color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
+#status-result .btn-buy:hover{background:var(--blue-hover);}
+#status-result .btn-ghost{width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-weight:600; cursor:pointer; margin-top:8px;}
+.btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:var(--blue); color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
+.btn-ghost{width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--text); font-weight:600; cursor:pointer; margin-top:8px;}
 .ok-hero{text-align:center; font-size:2.6rem;}
-footer{text-align:center; padding:24px 16px 32px; color:var(--fb-secondary); font-size:.85rem;}
+footer{text-align:center; padding:24px 16px 32px; color:var(--secondary); font-size:.85rem;}
 footer p{margin:4px 0;}
 @media(max-width:520px){.grid2{grid-template-columns:1fr;} .hero h1{font-size:1.25rem;}}
