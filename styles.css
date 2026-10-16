@@ -33,6 +33,25 @@ input:focus{outline:none; border-color:var(--azul);}
 .result-price{font-size:2rem; font-weight:800; color:var(--azul); margin:8px 0;}
 .result-box{background:var(--fundo); border-radius:12px; padding:16px; margin:14px 0; white-space:pre-wrap;}
 .result-box b{color:var(--petrol);}
+/* Cards profissionais da cotação */
+.quote-head{text-align:center; margin-bottom:16px;}
+.quote-route{font-weight:800; font-size:1.15rem; color:var(--petrol); letter-spacing:.5px;}
+.quote-price{font-size:2.4rem; font-weight:800; color:var(--coral); margin:6px 0 2px;}
+.quote-cia{color:var(--cinza); font-size:.92rem;}
+.flight-card{background:var(--fundo); border-radius:14px; padding:16px; margin:12px 0; border-left:5px solid var(--azul);}
+.flight-tipo{font-weight:800; color:var(--azul); margin-bottom:10px; font-size:.95rem;}
+.flight-data{color:var(--cinza); font-weight:600;}
+.flight-main{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.flight-airport{text-align:center; min-width:76px;}
+.flight-code{display:block; font-size:1.5rem; font-weight:800; color:var(--texto);}
+.flight-time{display:block; color:var(--cinza); font-size:.9rem; font-weight:600;}
+.flight-line{flex:1; text-align:center; padding:0 6px;}
+.flight-dur{display:block; font-size:.8rem; color:var(--cinza); font-weight:600;}
+.flight-bar{display:block; height:2px; background:#c9d2f2; margin:6px 0; position:relative;}
+.flight-bar::after{content:"✈"; position:absolute; top:-11px; left:50%; transform:translateX(-50%); color:var(--coral); font-size:.9rem;}
+.flight-stops{display:block; font-size:.8rem; color:var(--petrol); font-weight:600;}
+.quote-info{display:flex; gap:10px; align-items:flex-start; background:var(--branco); border:1px solid #dfe3f5; border-radius:12px; padding:12px 14px; margin:10px 0; font-size:.92rem;}
+.quote-ico{font-size:1.4rem;}
 .btn-buy{width:100%; padding:15px; border:none; border-radius:12px; background:#25D366; color:#fff; font-size:1.1rem; font-weight:800; cursor:pointer; margin-top:10px;}
 .btn-ghost{width:100%; padding:12px; border:2px solid var(--azul); border-radius:12px; background:#fff; color:var(--azul); font-weight:700; cursor:pointer; margin-top:10px;}
 .ok-hero{text-align:center; font-size:3rem;}

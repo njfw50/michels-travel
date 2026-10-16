@@ -96,14 +96,37 @@ function mostrarResultado(lead) {
   statusLoading.classList.add('hidden');
   statusResult.classList.remove('hidden');
   const res = lead.result || {};
-  statusResult.innerHTML = `
-    <h2>✈️ Sua cotação</h2>
-    <div class="result-price">${escapeHtml(res.preco_total || '—')}</div>
-    <div class="result-box">${escapeHtml(res.texto || 'Cotação pronta!')}</div>
+  const e = escapeHtml;
+  let html = `<h2>✈️ Sua cotação</h2>`;
+
+  if (Array.isArray(res.trechos) && res.trechos.length) {
+    // Cards profissionais por trecho
+    html += `<div class="quote-head"><div class="quote-route">${e(res.rota || '')}</div><div class="quote-price">${e(res.preco_total || '—')}</div><div class="quote-cia">${e(res.cia || '')}</div></div>`;
+    for (const t of res.trechos) {
+      html += `
+      <div class="flight-card">
+        <div class="flight-tipo">${e(t.tipo || '')} <span class="flight-data">${e(t.data || '')}</span></div>
+        <div class="flight-main">
+          <div class="flight-airport"><span class="flight-code">${e(t.saida || '')}</span><span class="flight-time">${e(t.hora_saida || '')}</span></div>
+          <div class="flight-line"><span class="flight-dur">${e(t.duracao || '')}</span><span class="flight-bar"></span><span class="flight-stops">${e(t.escalas || '')}</span></div>
+          <div class="flight-airport"><span class="flight-code">${e(t.chegada || '')}</span><span class="flight-time">${e(t.hora_chegada || '')}</span></div>
+        </div>
+      </div>`;
+    }
+    if (res.bagagem) html += `<div class="quote-info"><span class="quote-ico">🧳</span><div><b>Bagagem</b><br>${e(res.bagagem)}</div></div>`;
+    if (res.regras) html += `<div class="quote-info"><span class="quote-ico">📋</span><div><b>Regras</b><br>${e(res.regras)}</div></div>`;
+  } else {
+    // Formato legado (texto livre)
+    html += `<div class="result-price">${e(res.preco_total || '—')}</div>
+    <div class="result-box">${e(res.texto || 'Cotação pronta!')}</div>`;
+  }
+
+  html += `
     <p class="fine">Valores verificados agora no sistema da agência. Sujeitos a disponibilidade.</p>
     <button class="btn-buy" id="btn-buy">Quero comprar ✅</button>
     <button class="btn-ghost" id="btn-nova">Fazer outra busca</button>
   `;
+  statusResult.innerHTML = html;
   document.getElementById('btn-buy').addEventListener('click', comprar);
   document.getElementById('btn-nova').addEventListener('click', () => location.reload());
 }
