@@ -1,40 +1,40 @@
+/* Michel's Travel — visual Facebook (extensão do Facebook) */
 :root{
-  --azul:#3D4EAB; --coral:#FA5F52; --petrol:#005A8E; --branco:#ffffff;
-  --fundo:#f2f4fb; --texto:#1e2440; --cinza:#6b7390;
+  --fb-blue:#1877F2; --fb-blue-hover:#166FE5; --fb-bg:#f0f2f5;
+  --fb-card:#ffffff; --fb-text:#050505; --fb-secondary:#65676B;
+  --fb-border:#ccd0d5; --fb-input:#f0f2f5; --fb-green:#42b883;
+  --wa-green:#25D366;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--fundo); color:var(--texto); line-height:1.55;}
-.topbar{display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:var(--branco); box-shadow:0 2px 8px rgba(0,0,0,.06); position:sticky; top:0; z-index:10;}
-.logo{height:52px; width:52px; border-radius:10px; object-fit:cover;}
-.btn-whats{background:#25D366; color:#fff; text-decoration:none; font-weight:700; padding:10px 18px; border-radius:999px;}
-.hero{background:linear-gradient(135deg,var(--azul),var(--petrol)); color:#fff; text-align:center; padding:48px 20px 40px;}
-.hero h1{font-size:1.7rem; max-width:640px; margin:0 auto 10px;}
-.hero .sub{opacity:.92; max-width:560px; margin:0 auto 28px;}
-.steps{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
-.step{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:14px; padding:12px 16px; max-width:220px; font-size:.92rem;}
-.step span{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--coral); font-weight:800; margin-right:8px;}
-main{max-width:640px; margin:0 auto; padding:24px 16px 40px;}
-.card{background:var(--branco); border-radius:18px; padding:28px 24px; box-shadow:0 6px 24px rgba(61,78,171,.10); margin-top:-8px;}
-.card h2{margin-bottom:18px; color:var(--azul);}
-.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-label{display:block; font-weight:600; font-size:.9rem; margin-bottom:12px;}
-input[type=text],input[type=tel],input[type=date],input[type=number]{width:100%; margin-top:6px; padding:12px; border:2px solid #dfe3f5; border-radius:10px; font-size:1rem;}
-input:focus{outline:none; border-color:var(--azul);}
-.check{display:flex; align-items:center; gap:8px; font-weight:600;}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; background:var(--fb-bg); color:var(--fb-text); line-height:1.5;}
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:var(--fb-card); box-shadow:0 1px 4px rgba(0,0,0,.1); position:sticky; top:0; z-index:10;}
+.logo{height:44px; width:44px; border-radius:50%; object-fit:cover;}
+.btn-whats{background:var(--wa-green); color:#fff; text-decoration:none; font-weight:600; padding:8px 16px; border-radius:6px; font-size:.95rem;}
+.hero{background:var(--fb-card); text-align:center; padding:32px 20px 28px; border-bottom:1px solid #dddfe2;}
+.hero h1{font-size:1.5rem; max-width:640px; margin:0 auto 8px; color:var(--fb-text);}
+.hero .sub{color:var(--fb-secondary); max-width:560px; margin:0 auto 20px; font-size:.95rem;}
+.steps{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.step{background:var(--fb-bg); border-radius:8px; padding:10px 14px; max-width:220px; font-size:.88rem; color:var(--fb-text);}
+.step span{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--fb-blue); color:#fff; font-weight:700; font-size:.8rem; margin-right:8px;}
+main{max-width:640px; margin:0 auto; padding:16px 16px 32px;}
+.card{background:var(--fb-card); border-radius:8px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,.10); margin-top:12px;}
+.card h2{margin-bottom:14px; color:var(--fb-text); font-size:1.2rem;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+label{display:block; font-weight:600; font-size:.88rem; margin-bottom:10px; color:var(--fb-text);}
+input[type=text],input[type=tel],input[type=date],input[type=number]{width:100%; margin-top:5px; padding:11px 12px; border:1px solid var(--fb-border); border-radius:6px; font-size:1rem; background:var(--fb-input); color:var(--fb-text);}
+input:focus{outline:none; border-color:var(--fb-blue); background:#fff;}
+.check{display:flex; align-items:center; gap:8px; font-weight:600; font-size:.9rem;}
 .check input{width:18px; height:18px;}
-.btn-primary{width:100%; margin-top:8px; padding:15px; border:none; border-radius:12px; background:var(--coral); color:#fff; font-size:1.1rem; font-weight:800; cursor:pointer;}
-.btn-primary:hover{filter:brightness(.95);}
+.btn-primary{width:100%; margin-top:8px; padding:12px; border:none; border-radius:6px; background:var(--fb-blue); color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer;}
+.btn-primary:hover{background:var(--fb-blue-hover);}
 .btn-primary:disabled{opacity:.6; cursor:wait;}
-.fine{font-size:.8rem; color:var(--cinza); margin-top:10px; text-align:center;}
+.fine{font-size:.78rem; color:var(--fb-secondary); margin-top:10px; text-align:center;}
 .hidden{display:none !important;}
 #status-loading{text-align:center; padding:20px 0;}
-#status-result{background:#f0f2f5; border-radius:8px; padding:12px; margin:0 -8px;}
-#status-result h2{color:#050505; font-size:1.2rem; margin-bottom:8px;}
-.spinner{width:52px; height:52px; margin:0 auto 16px; border:5px solid #dfe3f5; border-top-color:var(--coral); border-radius:50%; animation:girar 1s linear infinite;}
+.spinner{width:44px; height:44px; margin:0 auto 14px; border:4px solid #dddfe2; border-top-color:var(--fb-blue); border-radius:50%; animation:girar 1s linear infinite;}
 @keyframes girar{to{transform:rotate(360deg);}}
-.result-price{font-size:2rem; font-weight:800; color:var(--azul); margin:8px 0;}
-.result-box{background:var(--fundo); border-radius:12px; padding:16px; margin:14px 0; white-space:pre-wrap;}
-.result-box b{color:var(--petrol);}
+#status-result{background:var(--fb-bg); border-radius:8px; padding:12px; margin:0 -8px;}
+#status-result h2{color:var(--fb-text); font-size:1.2rem; margin-bottom:8px;}
 /* Cards da cotação — visual Facebook, compacto */
 .quote-head{text-align:center; margin-bottom:10px;}
 .quote-route{font-weight:700; font-size:1rem; color:#050505;}
@@ -54,11 +54,12 @@ input:focus{outline:none; border-color:var(--azul);}
 .flight-stops{display:block; font-size:.72rem; color:#65676B;}
 .quote-info{display:flex; gap:8px; align-items:flex-start; background:#fff; border-radius:8px; padding:8px 10px; margin:8px 0; font-size:.82rem; box-shadow:0 1px 2px rgba(0,0,0,.10);}
 .quote-ico{font-size:1.1rem;}
-#status-result .btn-buy{background:#1877F2;}
-#status-result .btn-ghost{border-color:#ccd0d5; color:#050505;}
-.btn-buy{width:100%; padding:15px; border:none; border-radius:12px; background:#25D366; color:#fff; font-size:1.1rem; font-weight:800; cursor:pointer; margin-top:10px;}
-.btn-ghost{width:100%; padding:12px; border:2px solid var(--azul); border-radius:12px; background:#fff; color:var(--azul); font-weight:700; cursor:pointer; margin-top:10px;}
-.ok-hero{text-align:center; font-size:3rem;}
-footer{text-align:center; padding:28px 16px 40px; color:var(--cinza); font-size:.9rem;}
+#status-result .btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:#1877F2; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
+#status-result .btn-buy:hover{background:#166FE5;}
+#status-result .btn-ghost{width:100%; padding:10px; border:1px solid var(--fb-border); border-radius:6px; background:#fff; color:var(--fb-text); font-weight:600; cursor:pointer; margin-top:8px;}
+.btn-buy{width:100%; padding:12px; border:none; border-radius:6px; background:#1877F2; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; margin-top:10px;}
+.btn-ghost{width:100%; padding:10px; border:1px solid var(--fb-border); border-radius:6px; background:#fff; color:var(--fb-text); font-weight:600; cursor:pointer; margin-top:8px;}
+.ok-hero{text-align:center; font-size:2.6rem;}
+footer{text-align:center; padding:24px 16px 32px; color:var(--fb-secondary); font-size:.85rem;}
 footer p{margin:4px 0;}
-@media(max-width:520px){.grid2{grid-template-columns:1fr;} .hero h1{font-size:1.35rem;}}
+@media(max-width:520px){.grid2{grid-template-columns:1fr;} .hero h1{font-size:1.25rem;}}
