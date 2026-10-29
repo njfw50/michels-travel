@@ -125,6 +125,56 @@ export default {
       return json({ ok: true });
     }
 
+    // ---- Assinante de promoções (cadastro permanente, por cidade) ----
+    if (url.pathname === '/api/subscribe' && req.method === 'POST') {
+      const d = await req.json();
+      const fone = String(d.whatsapp || '').replace(/\D/g, '');
+      if (fone.length < 8) return json({ error: 'whatsapp_invalido' }, 400);
+      const cidades = Array.isArray(d.cidades)
+        ? d.cidades.map((c) => String(c).trim().slice(0, 40)).filter(Boolean).slice(0, 15)
+        : [];
+      if (!cidades.length) return json({ error: 'sem_cidades' }, 400);
+      const id = 'sub:' + fone;
+      const anterior = await env.LEADS.get(id);
+      const sub = {
+        id,
+        nome: String(d.nome || '').trim().slice(0, 80),
+        whatsapp: String(d.whatsapp || '').trim().slice(0, 30),
+        cidades,
+        criado_em: anterior ? JSON.parse(anterior).criado_em : new Date().toISOString(),
+        atualizado_em: new Date().toISOString(),
+      };
+      // SEM TTL: assinante fica até pedir pra sair
+      await env.LEADS.put(id, JSON.stringify(sub));
+      const idx = JSON.parse((await env.LEADS.get('idx:subs')) || '[]');
+      if (!idx.includes(id)) {
+        idx.push(id);
+        await env.LEADS.put('idx:subs', JSON.stringify(idx));
+      }
+      return json({ ok: true });
+    }
+
+    // ---- Equipe lê os assinantes ----
+    if (url.pathname === '/api/subscribers' && req.method === 'GET') {
+      const idx = JSON.parse((await env.LEADS.get('idx:subs')) || '[]');
+      const out = [];
+      for (const id of idx) {
+        const raw = await env.LEADS.get(id);
+        if (raw) out.push(JSON.parse(raw));
+      }
+      return json({ subscribers: out });
+    }
+
+    // ---- Assinante pede pra sair ----
+    if (url.pathname === '/api/unsubscribe' && req.method === 'POST') {
+      const d = await req.json();
+      const id = 'sub:' + String(d.whatsapp || '').replace(/\D/g, '');
+      await env.LEADS.delete(id);
+      const idx = JSON.parse((await env.LEADS.get('idx:subs')) || '[]');
+      await env.LEADS.put('idx:subs', JSON.stringify(idx.filter((x) => x !== id)));
+      return json({ ok: true });
+    }
+
     return json({ error: 'not_found' }, 404);
   },
 };
