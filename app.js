@@ -14,6 +14,48 @@ const SESSION_KEY = 'mt-search-session';
 let pollTimer = null;
 let leadId = null;
 let pollBusy = false;
+let currentSession = null;
+let durableReferenceSeen = false;
+
+function resumeWarning() {
+  const feedback = document.getElementById('resume-feedback');
+  feedback.textContent = 'Este navegador não permitiu salvar a busca de forma permanente. Mantenha esta página aberta para acompanhar a cotação.';
+  feedback.classList.remove('hidden');
+  document.getElementById('resume-note').textContent = '';
+}
+
+function persistResume(session, force = false) {
+  currentSession = session;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    const previous = experience.parseSession(raw, Date.now());
+    if (previous) durableReferenceSeen = true;
+    // A cleared or newer search in another tab owns the persistent reference.
+    if (!force && raw !== null && previous?.id !== session.id) return session;
+    // Merge the latest shared snapshot, not just this tab's older memory.
+    if (!force && previous) session = experience.cacheSession(previous, session);
+    currentSession = session;
+    const serialized = JSON.stringify(session);
+    localStorage.setItem(SESSION_KEY, serialized);
+    if (localStorage.getItem(SESSION_KEY) !== serialized) throw new Error('Salvamento não confirmado');
+    durableReferenceSeen = true;
+    try { sessionStorage.removeItem(SESSION_KEY); }
+    catch (error) { console.warn('Não foi possível limpar a referência antiga da aba.'); }
+    document.getElementById('resume-feedback').classList.add('hidden');
+    document.getElementById('resume-note').textContent = 'Sua busca está salva neste navegador. Ao voltar por este link, você retoma a mesma consulta.';
+  } catch (error) {
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
+    catch (fallbackError) { console.warn('Não foi possível guardar a referência da consulta nesta aba.'); }
+    resumeWarning();
+  }
+  return session;
+}
+
+function rememberLead(lead) {
+  if (!currentSession) return null;
+  const saved = experience.cacheSession(currentSession, lead);
+  return persistResume(saved);
+}
 
 // Tema familiar claro/escuro: mantém a preferência já usada no site.
 const btnTheme = document.getElementById('btn-theme');
@@ -87,8 +129,7 @@ form.addEventListener('submit', async event => {
     const data = await response.json();
     if (typeof data.id !== 'string' || !/^[\w-]{1,128}$/.test(data.id)) throw new Error('Referência da consulta ausente');
     const session = experience.makeSession(data.id, payload, Date.now());
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
-    catch (error) { console.warn('Não foi possível guardar a referência. Mantenha esta aba aberta para acompanhar a consulta.'); }
+    persistResume(session, true);
     beginQuote(session);
   } catch (error) {
     showFormError('Não foi possível enviar sua busca agora. Tente novamente ou fale com a agência pelo WhatsApp (862) 350-1161.');
@@ -103,6 +144,7 @@ document.getElementById('ida').addEventListener('input', () => voltaInput.setCus
 
 function beginQuote(session, restored = false) {
   leadId = session.id;
+  currentSession = session;
   buscaCard.classList.add('hidden');
   statusCard.classList.remove('hidden');
   statusLoading.classList.remove('hidden');
@@ -113,6 +155,19 @@ function beginQuote(session, restored = false) {
   const searchLink = document.getElementById('nav-search');
   searchLink.setAttribute('href', '#status-card');
   searchLink.textContent = 'Sua cotação';
+  if (restored && session.status === 'done' && session.result) {
+    mostrarResultado({ result: session.result }, true);
+    verificarStatus();
+    return;
+  }
+  if (restored && ['buy_intent', 'notified'].includes(session.status)) {
+    showBuyConfirmed();
+    return;
+  }
+  if (restored && ['error', 'expired'].includes(session.status)) {
+    mostrarErro(session.status === 'expired');
+    return;
+  }
   if (!restored) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   clearInterval(pollTimer);
   pollTimer = setInterval(verificarStatus, 15000);
@@ -130,22 +185,36 @@ function stopWaiting() {
 async function verificarStatus() {
   if (!leadId || pollBusy) return;
   pollBusy = true;
+  const requestId = leadId;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(WORKER_URL + '/api/status?id=' + encodeURIComponent(leadId), { signal: controller.signal });
-    if (response.status === 404) { mostrarErro(true); return; }
+    const response = await fetch(WORKER_URL + '/api/status?id=' + encodeURIComponent(requestId), { signal: controller.signal });
+    if (leadId !== requestId) return;
+    if (response.status === 404) {
+      if (currentSession?.status === 'done' && currentSession.result) {
+        mostrarResultado({ result: currentSession.result }, true);
+      } else {
+        rememberLead({ status: 'expired' });
+        mostrarErro(true);
+      }
+      return;
+    }
     if (!response.ok) throw new Error('Status temporariamente indisponível');
     const lead = await response.json();
-    if (lead.status === 'done') {
+    if (leadId !== requestId) return;
+    if (lead.id && lead.id !== requestId) throw new Error('Referência de cotação divergente');
+    const saved = rememberLead(lead);
+    const status = saved?.status || lead.status;
+    if (status === 'done') {
       waiting.update('done');
-      mostrarResultado(lead);
-    } else if (lead.status === 'error') {
+      mostrarResultado({ result: saved?.result || lead.result });
+    } else if (status === 'error') {
       mostrarErro();
-    } else if (lead.status === 'buy_intent' || lead.status === 'notified') {
+    } else if (status === 'buy_intent' || status === 'notified') {
       showBuyConfirmed();
     } else {
-      waiting.update(lead.status);
+      waiting.update(status);
     }
   } catch (error) {
     waiting.update('reconnecting');
@@ -158,11 +227,12 @@ async function verificarStatus() {
 
 function icon(name) { return `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`; }
 
-function mostrarResultado(lead) {
+function mostrarResultado(lead, saved = false) {
   stopWaiting();
   const result = lead.result || {};
   const e = escapeHtml;
-  let html = `<div class="quote-heading"><div><span class="eyebrow">O PRÓXIMO PASSO DA SUA VIAGEM</span><h1>Sua cotação chegou.</h1></div><span class="icon-box">${icon('plane')}</span></div>`;
+  let html = `<div class="quote-heading"><div><span class="eyebrow">O PRÓXIMO PASSO DA SUA VIAGEM</span><h1>${saved ? 'Sua cotação salva.' : 'Sua cotação chegou.'}</h1></div><span class="icon-box">${icon('plane')}</span></div>`;
+  if (saved) html += '<p class="quote-fine">Você retomou a última cotação salva neste navegador. Confirme os valores e a disponibilidade com a agência antes da compra.</p>';
   if (Array.isArray(result.trechos) && result.trechos.length) {
     html += `<div class="quote-head"><div><div class="quote-route">${e(result.rota || '')}</div><div class="quote-cia">${e(result.cia || '')}</div></div><div class="quote-price"><small>VALOR TOTAL INFORMADO</small>${e(result.preco_total || 'A confirmar')}</div></div>`;
     for (const trecho of result.trechos) {
@@ -196,6 +266,7 @@ async function comprar() {
     if (!response.ok) throw new Error('Não foi possível registrar o interesse');
     const data = await response.json();
     if (data.ok !== true) throw new Error('Confirmação de interesse ausente');
+    rememberLead({ status: 'buy_intent' });
     showBuyConfirmed();
   } catch (error) {
     button.disabled = false;
@@ -220,25 +291,63 @@ function mostrarErro(expired = false) {
 }
 
 function bindNewSearch() {
-  document.getElementById('btn-nova').addEventListener('click', () => {
-    try { sessionStorage.removeItem(SESSION_KEY); }
-    catch (error) { console.warn('Não foi possível limpar a referência desta aba.'); }
-    leadId = null;
-    clearInterval(pollTimer);
-    location.reload();
-  });
+  document.getElementById('btn-nova').addEventListener('click', startNewSearch);
 }
+
+function startNewSearch() {
+  // A durable null marks an intentional reset, preventing old-tab migration.
+  let durableCleared = false;
+  try {
+    try { localStorage.setItem(SESSION_KEY, 'null'); }
+    catch (error) {
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.setItem(SESSION_KEY, 'null');
+    }
+    if (localStorage.getItem(SESSION_KEY) !== 'null') throw new Error('Limpeza não confirmada');
+    durableCleared = true;
+  } catch (error) {
+    if (durableReferenceSeen) { showResetError(); return; }
+  }
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+    if (sessionStorage.getItem(SESSION_KEY) !== null) throw new Error('Limpeza da aba não confirmada');
+  } catch (error) {
+    if (!durableCleared) { showResetError(); return; }
+    console.warn('A referência antiga da aba foi substituída pela limpeza persistente.');
+  }
+  leadId = null;
+  currentSession = null;
+  clearInterval(pollTimer);
+  waiting.finish();
+  location.reload();
+}
+
+function showResetError() {
+  const feedback = document.getElementById('resume-feedback');
+  feedback.textContent = 'Não foi possível limpar a busca salva neste navegador. Tente novamente antes de iniciar outra consulta.';
+  feedback.classList.remove('hidden');
+}
+
+document.getElementById('btn-waiting-new').addEventListener('click', startNewSearch);
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
 
-// Recarregar a mesma aba não cria outro pedido na fila do Muse.
+// Reabrir no mesmo navegador retoma a busca; a aba antiga não é necessária.
 try {
-  const raw = sessionStorage.getItem(SESSION_KEY);
+  let raw = null;
+  try { raw = localStorage.getItem(SESSION_KEY); }
+  catch (error) { resumeWarning(); }
+  if (raw === null) {
+    try { raw = sessionStorage.getItem(SESSION_KEY); }
+    catch (error) { console.warn('Não foi possível ler a referência antiga desta aba.'); }
+  }
   const session = experience.parseSession(raw, Date.now());
-  if (session) beginQuote(session, true);
-  else if (raw) sessionStorage.removeItem(SESSION_KEY);
+  if (session) {
+    persistResume(session);
+    beginQuote(session, true);
+  }
 } catch (error) {
   console.warn('A retomada automática não está disponível neste navegador.');
 }

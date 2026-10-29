@@ -58,7 +58,7 @@
 
   function makeSession(id, payload, startedAt) {
     return {
-      id, startedAt,
+      id, startedAt, status: 'pending',
       trip: {
         origem: String(payload.origem || '').slice(0, 200),
         destino: String(payload.destino || '').slice(0, 200),
@@ -69,16 +69,42 @@
     };
   }
 
+  function cacheSession(original, lead) {
+    const saved = makeSession(original.id, original.trip, original.startedAt);
+    const states = ['pending', 'searching', 'done', 'error', 'expired', 'buy_intent', 'notified'];
+    saved.status = states.includes(lead.status) ? lead.status : original.status || 'pending';
+    // A stale status read must not undo a received quote or confirmed interest.
+    if (['buy_intent', 'notified'].includes(original.status) && saved.status !== 'notified') saved.status = original.status;
+    else if (original.status === 'done' && ['pending', 'searching'].includes(saved.status)) saved.status = 'done';
+    const result = lead.result || original.result;
+    if (result && typeof result === 'object' && !Array.isArray(result)) {
+      saved.result = {};
+      for (const field of ['rota', 'preco_total', 'cia', 'bagagem', 'regras', 'texto']) {
+        if (result[field] !== undefined && result[field] !== null) saved.result[field] = String(result[field]);
+      }
+      if (Array.isArray(result.trechos)) {
+        saved.result.trechos = result.trechos.filter(trecho => trecho && typeof trecho === 'object').map(trecho => {
+          const item = {};
+          for (const field of ['tipo', 'data', 'saida', 'hora_saida', 'chegada', 'hora_chegada', 'duracao', 'escalas']) {
+            if (trecho[field] !== undefined && trecho[field] !== null) item[field] = String(trecho[field]);
+          }
+          return item;
+        });
+      }
+    }
+    return saved;
+  }
+
   function parseSession(raw, now) {
     try {
       const data = JSON.parse(raw);
       if (!data || typeof data.id !== 'string' || !/^[\w-]{1,128}$/.test(data.id)) return null;
-      if (!Number.isFinite(data.startedAt) || data.startedAt > now || now - data.startedAt >= 86400000) return null;
+      if (!Number.isFinite(data.startedAt) || data.startedAt < 0 || data.startedAt > now) return null;
       const trip = data.trip;
       if (!trip || typeof trip.origem !== 'string' || typeof trip.destino !== 'string') return null;
       if (!Number.isInteger(trip.adultos) || trip.adultos < 1 || trip.adultos > 9) return null;
       if (!Number.isInteger(trip.criancas) || trip.criancas < 0 || trip.criancas > 8) return null;
-      return makeSession(data.id, trip, data.startedAt);
+      return cacheSession(makeSession(data.id, trip, data.startedAt), data);
     } catch (error) {
       // A malformed local reference is discarded, never submitted as a new lead.
       return null;
@@ -163,5 +189,5 @@
     return { start, update, finish };
   }
 
-  return { describeStatus, destinationGuide, tripSummary, makeSession, parseSession, formatElapsed, createWaitUI };
+  return { describeStatus, destinationGuide, tripSummary, makeSession, cacheSession, parseSession, formatElapsed, createWaitUI };
 });

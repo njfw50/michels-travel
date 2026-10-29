@@ -62,13 +62,13 @@ test('session keeps the quote reference without retaining the visitor name, phon
   assert.equal(serialized.includes('criancas_idades'), false);
 });
 
-test('resume rejects broken, future and expired references', () => {
+test('resume rejects broken or future references but does not erase a real older search', () => {
   const parse = api('parseSession');
   assert.equal(parse('not json', 20000), null);
   assert.equal(parse(JSON.stringify({id: 'a', startedAt: 30000, trip: {}}), 20000), null);
-  assert.equal(parse(JSON.stringify({id: 'a', startedAt: 1, trip: {}}), 86400002), null);
   const session = api('makeSession')('quote-123', { origem: 'EWR', destino: 'GRU', adultos: 1, criancas_idades: [] }, 10000);
   assert.equal(parse(JSON.stringify(session), 20000).id, 'quote-123');
+  assert.equal(parse(JSON.stringify(session), 86420000)?.id, 'quote-123');
 });
 
 test('elapsed clock reports actual elapsed time and cannot display a negative countdown', () => {
@@ -80,7 +80,7 @@ test('elapsed clock reports actual elapsed time and cannot display a negative co
 
 // The browser is exercised separately. This small boundary harness runs the
 // actual application with only browser facilities and the external Worker replaced.
-function mount({ responder, session } = {}) {
+function mount({ responder, session, localMemory, blockPersistence = false, failClear = false } = {}) {
   const ids = new Map();
   const listeners = new Map();
   class Element {
@@ -112,16 +112,23 @@ function mount({ responder, session } = {}) {
   ids.set('submit-button', new Element('submit-button'));
   const values = { nome: 'Ana', whatsapp: '+15555550123', origem: 'Newark (EWR)', destino: 'São Paulo (GRU)', ida: '2026-11-24', volta: '2026-12-05', adultos: '1', criancas: '0' };
   for (const [id, value] of Object.entries(values)) ids.get(id).value = value;
-  const memory = new Map(session ? [['mt-search-session', JSON.stringify(session)]] : []);
-  const storage = { getItem: key => memory.get(key) ?? null, setItem: (key, value) => memory.set(key, value), removeItem: key => memory.delete(key) };
+  const memory = localMemory || new Map();
+  const tabMemory = new Map(session ? [['mt-search-session', JSON.stringify(session)]] : []);
+  const makeStorage = data => ({ getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) });
+  const normalStorage = makeStorage(memory);
+  const persistentStorage = blockPersistence ? {getItem() {throw new Error('Storage blocked');}, setItem() {throw new Error('Storage blocked');}, removeItem() {throw new Error('Storage blocked');}} : {
+    ...normalStorage,
+    setItem(key, value) { if (failClear && key === 'mt-search-session' && value === 'null') throw new Error('Reset blocked'); normalStorage.setItem(key,value); },
+    removeItem(key) { if (failClear && key === 'mt-search-session') throw new Error('Reset blocked'); normalStorage.removeItem(key); }
+  };
   const calls = [];
   let timer = 0;
   const context = {
     document: { getElementById: id => ids.get(id) ?? null, createElement: () => new Element(), querySelectorAll: () => [], documentElement: new Element(), body: new Element(), addEventListener: (type, fn) => listeners.set(type, fn), hidden: false },
-    console, Intl, Date, URL, URLSearchParams, AbortController, encodeURIComponent,
+    console: {...console, warn() {}}, Intl, Date, URL, URLSearchParams, AbortController, encodeURIComponent,
     setInterval: () => ++timer, clearInterval() {}, setTimeout: () => ++timer, clearTimeout() {},
-    matchMedia: () => ({ matches: false }), localStorage: storage, sessionStorage: storage,
-    location: { reload() {} }, alert(message) { context.lastAlert = message; }, scrollTo() {},
+    matchMedia: () => ({ matches: false }), localStorage: persistentStorage, sessionStorage: makeStorage(tabMemory),
+    location: { reload() { context.didReload = true; } }, alert(message) { context.lastAlert = message; }, scrollTo() {},
     addEventListener: (type, fn) => listeners.set(type, fn),
     fetch: async (url, options = {}) => {
       calls.push({url, options});
@@ -135,7 +142,7 @@ function mount({ responder, session } = {}) {
   vm.createContext(context);
   if (fs.existsSync(experiencePath)) vm.runInContext(fs.readFileSync(experiencePath, 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8'), context);
-  return {context, ids, calls, memory, submit: () => ids.get('flight-form').handlers.submit({preventDefault() {}})};
+  return {context, ids, calls, memory, tabMemory, submit: () => ids.get('flight-form').handlers.submit({preventDefault() {}})};
 }
 
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -182,3 +189,117 @@ test('a missing quote is terminal and gives the visitor a route to retry', async
   assert.equal(page.ids.get('status-result').classList.contains('hidden'), false);
   assert.match(page.ids.get('status-result').innerHTML, /expirou|encontrar|encontrada/i);
 });
+
+test('closing the tab and reopening restores the same search without a duplicate POST', async () => {
+  const first = mount(); await first.submit(); await flush();
+  const reopened = mount({localMemory:first.memory}); await flush();
+  assert.equal(reopened.tabMemory.size, 0, 'the old tab is gone');
+  assert.ok(reopened.calls.some(call=>call.url.endsWith('/api/status?id=quote-123')));
+  assert.equal(reopened.calls.some(call=>call.options.method==='POST'), false);
+  assert.equal(reopened.ids.get('busca-card').classList.contains('hidden'), true);
+});
+
+test('legacy references are migrated from the old tab storage to persistent storage', async () => {
+  const session = {id:'legacy-quote',startedAt:Date.now()-1000,trip:{origem:'EWR',destino:'GRU',ida:'2026-11-24',volta:null,so_ida:true,adultos:1,criancas:0}};
+  const page = mount({session}); await flush();
+  assert.equal(JSON.parse(page.memory.get('mt-search-session') || 'null')?.id, 'legacy-quote');
+  assert.equal(page.tabMemory.has('mt-search-session'), false);
+});
+
+test('a completed quote survives reopening even after the server no longer has the record', async () => {
+  const session = {id:'saved-quote',startedAt:Date.now()-90000000,status:'done',trip:{origem:'EWR',destino:'GRU',ida:'2026-11-24',volta:null,so_ida:true,adultos:1,criancas:0},result:{preco_total:'US$ 850',texto:'Minha cotação salva'}};
+  const page = mount({localMemory:new Map([['mt-search-session',JSON.stringify(session)]]),responder:async()=>({ok:false,status:404,json:async()=>({error:'not_found'})})});
+  await flush();
+  assert.match(page.ids.get('status-result').innerHTML, /Minha cotação salva/);
+  assert.match(page.ids.get('status-result').innerHTML, /salva/i);
+  assert.equal(page.ids.get('busca-card').classList.contains('hidden'), true);
+  assert.equal(JSON.parse(page.memory.get('mt-search-session')).id, 'saved-quote');
+});
+
+test('server expiry keeps the existing search visible until an explicit new-search click', async () => {
+  const session = {id:'expired-quote',startedAt:Date.now()-90000000,trip:{origem:'EWR',destino:'GRU',ida:'2026-11-24',volta:null,so_ida:true,adultos:1,criancas:0}};
+  const page = mount({localMemory:new Map([['mt-search-session',JSON.stringify(session)]]),responder:async()=>({ok:false,status:404,json:async()=>({error:'not_found'})})});
+  await flush();
+  assert.equal(page.ids.get('busca-card').classList.contains('hidden'), true);
+  assert.match(page.ids.get('status-result').innerHTML, /expirou/);
+  assert.equal(JSON.parse(page.memory.get('mt-search-session')).id, 'expired-quote');
+});
+
+test('only an explicit new-search click clears persistent recovery and prevents legacy resurrection', async () => {
+  const session = {id:'old-quote',startedAt:Date.now()-1000,status:'done',trip:{origem:'EWR',destino:'GRU',ida:'2026-11-24',volta:null,so_ida:true,adultos:1,criancas:0},result:{texto:'Cotação antiga'}};
+  const memory = new Map([['mt-search-session',JSON.stringify(session)]]);
+  const page = mount({localMemory:memory,session,responder:async()=>({ok:true,json:async()=>({id:'old-quote',status:'done',result:{texto:'Cotação antiga'}})})});
+  await flush(); await page.ids.get('btn-nova').handlers.click();
+  assert.equal(memory.get('mt-search-session'), 'null');
+  const reopened = mount({localMemory:memory,session}); await flush();
+  assert.equal(reopened.calls.length, 0);
+  assert.equal(reopened.ids.get('busca-card').classList.contains('hidden'), false);
+});
+
+test('blocked persistent storage gives the visitor an explicit warning and keeps a same-tab fallback', async () => {
+  const page = mount({blockPersistence:true}); await page.submit(); await flush();
+  assert.match(page.ids.get('resume-feedback')?.textContent || '', /salvar|guardar/i);
+  assert.equal(page.ids.get('resume-feedback')?.classList.contains('hidden'), false);
+  assert.equal(JSON.parse(page.tabMemory.get('mt-search-session') || 'null')?.id, 'quote-123');
+});
+
+test('cached quote snapshots retain displayed fields without copying passenger contact fields', () => {
+  const original = api('makeSession')('quote-123',{origem:'EWR',destino:'GRU',adultos:1,criancas_idades:[]},Date.now());
+  const saved = api('cacheSession')(original,{status:'done',result:{preco_total:'US$ 850',texto:'Cotação completa',nome:'Nome privado',whatsapp:'Número privado',trechos:[{tipo:'Ida',saida:'EWR',chegada:'GRU',passageiro:'Outro nome'}]}});
+  assert.equal(saved.status,'done');
+  assert.equal(saved.result.texto,'Cotação completa');
+  assert.equal(saved.result.trechos[0].saida,'EWR');
+  assert.equal(JSON.stringify(saved).includes('privado'),false);
+  assert.equal(JSON.stringify(saved).includes('Outro nome'),false);
+});
+
+test('an explicit new-search button is available while the old quote is still pending', async () => {
+  const page = mount(); await page.submit(); await flush();
+  const button = page.ids.get('btn-waiting-new');
+  assert.equal(typeof button?.handlers.click, 'function');
+  await button.handlers.click();
+  assert.equal(page.memory.get('mt-search-session'), 'null');
+  assert.equal(page.context.didReload, true);
+});
+
+test('a blocked reset does not silently reload the old quote as though it were cleared', async () => {
+  const page = mount({failClear:true}); await page.submit(); await flush();
+  const button = page.ids.get('btn-waiting-new');
+  assert.equal(typeof button?.handlers.click, 'function');
+  await button.handlers.click();
+  assert.equal(page.context.didReload, undefined);
+  assert.match(page.ids.get('resume-feedback')?.textContent || '', /limpar/i);
+  assert.equal(JSON.parse(page.memory.get('mt-search-session')).id,'quote-123');
+});
+
+test('a browser using only the session fallback can explicitly start another search', async () => {
+  const page = mount({blockPersistence:true}); await page.submit(); await flush();
+  assert.equal(JSON.parse(page.tabMemory.get('mt-search-session')).id,'quote-123');
+  await page.ids.get('btn-waiting-new').handlers.click();
+  assert.equal(page.tabMemory.has('mt-search-session'),false);
+  assert.equal(page.context.didReload,true);
+});
+
+for (const terminal of ['done','buy_intent']) {
+  test(`a delayed pending response in an older tab cannot overwrite shared ${terminal} state`, async () => {
+    let releaseOldStatus;
+    const old = mount({responder: async url => {
+      if (url.endsWith('/api/lead')) return {ok:true,json:async()=>({id:'quote-123'})};
+      return new Promise(resolve=>{releaseOldStatus=resolve;});
+    }});
+    await old.submit(); await flush();
+    assert.equal(typeof releaseOldStatus,'function');
+    const newer = mount({localMemory:old.memory,responder:async url=>{
+      if(url.endsWith('/api/buy'))return {ok:true,json:async()=>({ok:true})};
+      return {ok:true,json:async()=>({id:'quote-123',status:'done',result:{texto:'Cotação atualizada',preco_total:'US$ 900'}})};
+    }});
+    await flush();
+    if(terminal==='buy_intent')await newer.ids.get('btn-buy').handlers.click();
+    assert.equal(JSON.parse(old.memory.get('mt-search-session')).status,terminal);
+    releaseOldStatus({ok:true,json:async()=>({id:'quote-123',status:'pending',result:null})});
+    await flush();
+    const stored=JSON.parse(old.memory.get('mt-search-session'));
+    assert.equal(stored.status,terminal);
+    assert.equal(stored.result.texto,'Cotação atualizada');
+  });
+}

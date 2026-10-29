@@ -83,6 +83,7 @@
     </section>
 
     <section class="card status-card hidden" id="status-card" aria-label="Acompanhamento da sua viagem">
+      <p class="form-error hidden" id="resume-feedback" role="status"></p>
       <div id="status-loading">
         <div class="waiting-top"><span class="eyebrow">SUA VIAGEM, COM CUIDADO EM CADA DETALHE</span><span class="search-state" id="search-state" role="status" aria-live="polite" aria-atomic="true"><span class="pulse-dot"></span><span id="search-state-label">Pedido na fila</span></span></div>
         <div class="waiting-grid">
@@ -97,6 +98,8 @@
             </ol>
             <div class="elapsed-row"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span>Tempo nesta consulta <strong id="elapsed-time" aria-live="off">00:00</strong></span></div>
             <p class="waiting-footnote">Pode levar alguns minutos. Você pode explorar esta página enquanto aguarda.</p>
+            <p class="waiting-footnote" id="resume-note"></p>
+            <div class="quote-actions"><button type="button" class="btn-ghost" id="btn-waiting-new">Fazer outra busca</button></div>
           </div>
           <aside class="waiting-postcard" aria-label="Inspiração de viagem">
             <img src="assets/rio-hero.webp" alt="Paisagem ilustrativa do Rio de Janeiro ao entardecer" width="1776" height="888">
@@ -139,7 +142,7 @@
   <footer><div class="footer-inner"><div><strong>Michel's Travel</strong><span>OPÇÃO EFICIENTE</span></div><div class="footer-links"><a href="https://wa.me/18623501161" target="_blank" rel="noopener">(862) 350-1161</a><a href="mailto:michelstravelus@gmail.com">michelstravelus@gmail.com</a><a href="https://www.instagram.com/michelstravel/" target="_blank" rel="noopener">@michelstravel</a></div></div><p class="footer-fine">Valores sujeitos a disponibilidade e confirmação na reserva. O envio da cotação não garante tarifa ou emissão da passagem.</p></footer>
   <noscript><p class="noscript-note">Ative o JavaScript para buscar e acompanhar sua cotação ou fale com a agência pelo WhatsApp: <a href="https://wa.me/18623501161">(862) 350-1161</a>.</p></noscript>
   <script src="config.js?v=4"></script>
-  <script src="experience.js?v=20261029"></script>
-  <script src="app.js?v=20261029"></script>
+  <script src="experience.js?v=20261029-2"></script>
+  <script src="app.js?v=20261029-2"></script>
 </body>
 </html>

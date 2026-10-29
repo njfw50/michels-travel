@@ -44,6 +44,16 @@ Execute `node --test tests/static-site.test.cjs` para conferir o contrato com a 
 os estados de espera, a retomada da mesma cotação e as confirmações de interesse.
 Os testes não enviam pedidos ao Muse nem criam reservas.
 
-A referência e o resumo da consulta ficam em `sessionStorage`, somente na mesma
-aba, por até 24 horas. Nome, telefone e idades das crianças não são guardados por
-essa retomada. A configuração e os endpoints da ponte continuam os mesmos.
+A referência, o resumo e os campos exibidos da última cotação ficam em
+`localStorage`, para retomar a consulta mesmo depois de fechar a aba e abrir
+o link novamente no mesmo navegador. Referências da versão anterior são
+migradas de `sessionStorage`. O formulário não guarda nome, telefone ou idades
+das crianças para essa retomada. A configuração e os endpoints continuam iguais.
+
+Somente “Fazer outra busca” limpa a referência. Se o navegador bloquear o
+salvamento, a página avisa e tenta manter uma referência da mesma aba. Limpar os
+dados do site, trocar de navegador ou dispositivo não conserva essa identificação;
+ela não depende do IP. O Worker continua mantendo pedidos pendentes por 24 horas.
+Depois disso, uma consulta sem resultado exibe a expiração sem reiniciar sozinha.
+A última cotação concluída salva continua legível, com aviso para reconfirmar
+preço e disponibilidade.
