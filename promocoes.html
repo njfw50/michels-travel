@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3D4EAB">
+  <title>Receba as Promoções — Michel's Travel</title>
+  <meta name="description" content="Cadastre-se grátis e receba no WhatsApp as promoções de passagens da Michel's Travel para as cidades que você ama viajar.">
+  <link rel="icon" href="assets/logo.jpg">
+  <link rel="stylesheet" href="styles.css?v=20261029">
+  <script>(function(){try{var t=localStorage.getItem('mt-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <style>
+    .promo-wrap{max-width:880px; margin:0 auto; padding:28px 16px 8px;}
+    .promo-head{text-align:center; margin:18px 0 20px;}
+    .promo-head h1{font-size:2rem; line-height:1.15; margin:8px 0 10px;}
+    .promo-head p{max-width:620px; margin:0 auto;}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 4px;}
+    .chip{border:1px solid var(--border,#ccc); background:transparent; color:inherit; border-radius:999px; padding:9px 16px; font-size:.95rem; cursor:pointer; user-select:none;}
+    .chip.on{background:#FA5F52; border-color:#FA5F52; color:#fff; font-weight:700;}
+    .promo-ok{text-align:center; padding:16px 0 6px;}
+    .promo-ok .big{font-size:2.2rem;}
+    .hidden{display:none;}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+
+  <header class="topbar">
+    <div class="nav-inner">
+      <a class="brand" href="./" aria-label="Michel's Travel — início">
+        <img src="assets/logo.jpg" alt="Logo oficial Michel's Travel — Opção Eficiente" width="56" height="56" class="logo">
+        <span class="brand-name">Michel's Travel<span>OPÇÃO EFICIENTE</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Navegação principal">
+        <a href="./#busca-card">Sua viagem</a>
+        <a href="./#nossa-agencia">Nossa agência</a>
+        <a href="./#inspiracao">Inspire-se</a>
+        <a href="promocoes.html" aria-current="page">Promoções</a>
+      </nav>
+      <div class="topbar-actions">
+        <button class="btn-theme" id="btn-theme" type="button" aria-label="Ativar modo escuro">☾</button>
+        <a class="btn-whats" aria-label="Conversar pelo WhatsApp" href="https://wa.me/18623501161?text=Ol%C3%A1!%20Quero%20receber%20as%20promo%C3%A7%C3%B5es%20da%20Michel's%20Travel." target="_blank" rel="noopener"><span>Vamos conversar</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="promo-wrap">
+      <div class="promo-head">
+        <span class="eyebrow">PROMOÇÕES NO SEU WHATSAPP</span>
+        <h1>Preço bom não espera.<br>A gente te avisa.</h1>
+        <p>Escolha as cidades que você ama — ou sonha conhecer — e receba as promoções delas assim que saírem. Sem spam: só promoção da sua cidade, no seu WhatsApp.</p>
+      </div>
+
+      <section class="card search-card" aria-labelledby="promo-title">
+        <div class="section-heading">
+          <div><span class="eyebrow">MONTE SEU PERFIL DE VIAJANTE</span><h2 id="promo-title">Quais cidades você quer acompanhar?</h2></div>
+        </div>
+        <form id="promo-form" autocomplete="on">
+          <div class="details-grid">
+            <label>Seu nome<input type="text" id="nome" required maxlength="80" placeholder="Como podemos te chamar?" autocomplete="given-name"></label>
+            <label>Seu WhatsApp<input type="tel" id="whatsapp" required maxlength="30" placeholder="País + número com DDD" autocomplete="tel"></label>
+          </div>
+          <label style="display:block; margin-top:14px;">Toque nas suas cidades:</label>
+          <div class="chips" id="chips">
+            <span class="chip" data-cidade="São Paulo">São Paulo</span>
+            <span class="chip" data-cidade="Rio de Janeiro">Rio de Janeiro</span>
+            <span class="chip" data-cidade="Belo Horizonte">Belo Horizonte</span>
+            <span class="chip" data-cidade="Porto">Porto</span>
+            <span class="chip" data-cidade="Lisboa">Lisboa</span>
+            <span class="chip" data-cidade="Londres">Londres</span>
+            <span class="chip" data-cidade="Orlando">Orlando</span>
+            <span class="chip" data-cidade="Miami">Miami</span>
+            <span class="chip" data-cidade="Nova York">Nova York</span>
+            <span class="chip" data-cidade="Cancún">Cancún</span>
+            <span class="chip" data-cidade="Terra Santa">Terra Santa</span>
+            <span class="chip" data-cidade="Cruzeiros">Cruzeiros</span>
+          </div>
+          <div class="details-grid" style="margin-top:10px;">
+            <label>Outra cidade dos seus sonhos<input type="text" id="outra" maxlength="40" placeholder="Ex: Fortaleza, Paris, Tóquio…"></label>
+          </div>
+          <p class="form-error hidden" id="promo-feedback" role="alert"></p>
+          <div class="search-bottom">
+            <p class="privacy-note">Grátis, pra sempre. Só promoções das cidades escolhidas — e você sai quando quiser, é só pedir no WhatsApp.</p>
+            <button type="submit" class="btn-primary" id="promo-submit">Quero receber as promoções</button>
+          </div>
+        </form>
+        <div class="promo-ok hidden" id="promo-ok">
+          <div class="big">🎉</div>
+          <h2>Você entrou pra lista!</h2>
+          <p>Assim que sair uma promoção pras suas cidades, a Michel's Travel te chama no WhatsApp. Fica de olho!</p>
+          <p style="margin-top:10px;"><a class="text-link" href="./">← Voltar e buscar um voo agora</a></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer><div class="footer-inner"><div><strong>Michel's Travel</strong><span>OPÇÃO EFICIENTE</span></div><div class="footer-links"><a href="https://wa.me/18623501161" target="_blank" rel="noopener">(862) 350-1161</a><a href="mailto:michelstravelus@gmail.com">michelstravelus@gmail.com</a><a href="https://www.instagram.com/michelstravel/" target="_blank" rel="noopener">@michelstravel</a></div></div><p class="footer-fine">Valores sujeitos a disponibilidade e confirmação na reserva.</p></footer>
+
+  <script src="config.js?v=20261029"></script>
+  <script>
+    document.getElementById('btn-theme').addEventListener('click', function(){
+      var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', cur);
+      try{ localStorage.setItem('mt-theme', cur); }catch(e){}
+    });
+    var escolhidas = new Set();
+    document.querySelectorAll('.chip').forEach(function(ch){
+      ch.addEventListener('click', function(){
+        var c = ch.getAttribute('data-cidade');
+        if (escolhidas.has(c)) { escolhidas.delete(c); ch.classList.remove('on'); }
+        else { escolhidas.add(c); ch.classList.add('on'); }
+      });
+    });
+    document.getElementById('promo-form').addEventListener('submit', async function(ev){
+      ev.preventDefault();
+      var fb = document.getElementById('promo-feedback');
+      fb.classList.add('hidden'); fb.textContent = '';
+      var cidades = Array.from(escolhidas);
+      var outra = document.getElementById('outra').value.trim();
+      if (outra) cidades.push(outra);
+      if (!cidades.length) { fb.textContent = 'Escolha pelo menos uma cidade pra gente te avisar das promoções dela.'; fb.classList.remove('hidden'); return; }
+      var btn = document.getElementById('promo-submit');
+      btn.disabled = true; btn.textContent = 'Cadastrando…';
+      try {
+        var r = await fetch(WORKER_URL + '/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: document.getElementById('nome').value.trim(),
+            whatsapp: document.getElementById('whatsapp').value.trim(),
+            cidades: cidades
+          })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        document.getElementById('promo-form').classList.add('hidden');
+        document.getElementById('promo-ok').classList.remove('hidden');
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Quero receber as promoções';
+        fb.textContent = 'Não consegui cadastrar agora. Tenta de novo ou chama no WhatsApp (862) 350-1161 que a gente cadastra você na hora.';
+        fb.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
