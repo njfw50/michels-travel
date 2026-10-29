@@ -32,6 +32,18 @@ hora e o visitante vê "Em breve o agente vai entrar em contato".
 
 ## Arquivos
 - `index.html`, `styles.css`, `app.js` — o site
+- `experience.js` — conteúdo e acompanhamento da espera, sem dependências
+- `assets/rio-hero.webp` — imagem ilustrativa da apresentação
 - `config.js` — URL do Worker (editar após o deploy)
 - `assets/logo.jpg` — logo oficial (não alterar)
 - `worker/worker.js` — a ponte (Cloudflare)
+
+## Verificar a página estática
+
+Execute `node --test tests/static-site.test.cjs` para conferir o contrato com a ponte,
+os estados de espera, a retomada da mesma cotação e as confirmações de interesse.
+Os testes não enviam pedidos ao Muse nem criam reservas.
+
+A referência e o resumo da consulta ficam em `sessionStorage`, somente na mesma
+aba, por até 24 horas. Nome, telefone e idades das crianças não são guardados por
+essa retomada. A configuração e os endpoints da ponte continuam os mesmos.

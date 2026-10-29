@@ -1,96 +1,145 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Michel's Travel — Opção Eficiente | Passagens Brasil ⇄ EUA</title>
-<meta name="description" content="Cotação de passagens aéreas Brasil ⇄ Estados Unidos com atendimento em português, inglês e espanhol. Fale com a Michel's Travel.">
-<link rel="stylesheet" href="styles.css?v=4">
-<script>(function(){try{var t=localStorage.getItem('mt-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3D4EAB">
+  <title>Michel's Travel — Sua próxima viagem começa aqui</title>
+  <meta name="description" content="Passagens Brasil e Estados Unidos, cruzeiros e viagens com a Michel's Travel. Consulte sua tarifa e conte com atendimento em português, inglês e espanhol.">
+  <link rel="icon" href="assets/logo.jpg">
+  <link rel="preload" as="image" href="assets/rio-hero.webp">
+  <link rel="stylesheet" href="styles.css?v=20261029">
+  <script>(function(){try{var t=localStorage.getItem('mt-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){}})();</script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-plane" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-case" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="15" rx="3"/><path d="M9 6V3h6v3M9 10v7m6-7v7M8 21v1m8-1v1"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 1 1 19 0Z"/><path d="M7 10h10M7 14h6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12h20"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  </svg>
 
-<header class="topbar">
-  <img src="assets/logo.jpg" alt="Michel's Travel — Opção Eficiente" class="logo">
-  <div class="topbar-actions">
-    <button class="btn-theme" id="btn-theme" aria-label="Alternar modo escuro">🌙</button>
-    <a class="btn-whats" href="https://wa.me/18623501161?text=Ol%C3%A1!%20Quero%20uma%20cota%C3%A7%C3%A3o%20de%20voo%20com%20a%20Michel's%20Travel." target="_blank" rel="noopener">WhatsApp</a>
-  </div>
-</header>
-
-<main>
-  <!-- HERO -->
-  <section class="hero">
-    <h1>A viagem que você deseja, com o suporte mais inteligente e eficiente.</h1>
-    <p class="sub">Cruzeiros, pacotes e roteiros personalizados — atendimento em português, inglês e espanhol.</p>
-    <div class="steps">
-      <div class="step"><span>1</span>Preencha a busca abaixo</div>
-      <div class="step"><span>2</span>Consultamos as tarifas no sistema da agência</div>
-      <div class="step"><span>3</span>Você recebe a cotação aqui mesmo na tela</div>
+  <header class="topbar">
+    <div class="nav-inner">
+      <a class="brand" href="./" aria-label="Michel's Travel — início">
+        <img src="assets/logo.jpg" alt="Logo oficial Michel's Travel — Opção Eficiente" width="56" height="56" class="logo">
+        <span class="brand-name">Michel's Travel<span>OPÇÃO EFICIENTE</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Navegação principal">
+        <a href="#busca-card" id="nav-search">Sua viagem</a>
+        <a href="#nossa-agencia">Nossa agência</a>
+        <a href="#inspiracao">Inspire-se</a>
+      </nav>
+      <div class="topbar-actions">
+        <button class="btn-theme" id="btn-theme" type="button" aria-label="Ativar modo escuro">☾</button>
+        <a class="btn-whats" aria-label="Conversar pelo WhatsApp" href="https://wa.me/18623501161?text=Ol%C3%A1!%20Quero%20planejar%20minha%20viagem%20com%20a%20Michel%27s%20Travel." target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg><span>Vamos conversar</span></a>
+      </div>
     </div>
-  </section>
+  </header>
 
-  <!-- FORM -->
-  <section class="card" id="busca-card">
-    <h2>🔎 Buscar voo</h2>
-    <form id="flight-form" autocomplete="off">
-      <div class="grid2">
-        <label>Seu nome
-          <input type="text" id="nome" required placeholder="Como podemos te chamar?">
-        </label>
-        <label>Seu WhatsApp
-          <input type="tel" id="whatsapp" required placeholder="(862) 350-1161">
-        </label>
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <img class="hero-photo" src="assets/rio-hero.webp" alt="Vista ilustrativa da orla do Rio de Janeiro com o mar azul e os morros ao pôr do sol" width="1776" height="888" fetchpriority="high">
+      <div class="hero-shade"></div>
+      <div class="hero-copy">
+        <span class="eyebrow hero-kicker"><span class="small-line"></span> PARA PERTO DE QUEM IMPORTA</span>
+        <h1 id="hero-title">O seu próximo<br>destino começa <em>aqui.</em></h1>
+        <p>Do reencontro tão esperado à vontade de descobrir o mundo. A gente ajuda você a chegar.</p>
+        <a class="hero-link" href="#busca-card">Encontre a sua viagem <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </div>
-      <div class="grid2">
-        <label>Origem
-          <input type="text" id="origem" required placeholder="Ex: Newark (EWR)">
-        </label>
-        <label>Destino
-          <input type="text" id="destino" required placeholder="Ex: São Paulo (GRU)">
-        </label>
-      </div>
-      <div class="grid2">
-        <label>Ida
-          <input type="date" id="ida" required>
-        </label>
-        <label>Volta
-          <input type="date" id="volta">
-        </label>
-      </div>
-      <label class="check"><input type="checkbox" id="so_ida"> Somente ida</label>
-      <div class="grid2">
-        <label>Adultos (12+)
-          <input type="number" id="adultos" min="1" max="9" value="1" required>
-        </label>
-        <label>Crianças (0–11)
-          <input type="number" id="criancas" min="0" max="8" value="0">
-        </label>
-      </div>
-      <div id="idades-criancas"></div>
-      <button type="submit" class="btn-primary">Consultar tarifa ✈️</button>
-      <p class="fine">Sem cadastro, sem spam. Usamos seus dados só para fazer a cotação.</p>
-    </form>
-  </section>
+      <div class="hero-note"><span class="note-dot"></span> BRASIL ⇄ ESTADOS UNIDOS & ALÉM</div>
+      <div class="hero-place"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span>Rio de Janeiro<small>Um mundo de possibilidades.</small></span></div>
+    </section>
 
-  <!-- STATUS / RESULT -->
-  <section class="card hidden" id="status-card">
-    <div id="status-loading">
-      <div class="spinner"></div>
-      <h2>Consultando as tarifas…</h2>
-      <p>Estamos verificando os melhores preços no sistema da agência.<br>Isso leva alguns minutinhos — não feche esta página. ☕</p>
-    </div>
-    <div id="status-result" class="hidden"></div>
-  </section>
-</main>
+    <section class="card search-card" id="busca-card" aria-labelledby="search-title">
+      <div class="section-heading">
+        <div class="heading-with-icon"><span class="icon-box"><svg class="icon" aria-hidden="true"><use href="#i-plane"/></svg></span><div><span class="eyebrow">COMECE PELO SEU DESTINO</span><h2 id="search-title">Para onde vamos?</h2></div></div>
+        <span class="soft-badge"><span class="status-dot"></span> Sua cotação, aqui mesmo</span>
+      </div>
+      <form id="flight-form" autocomplete="on">
+        <div class="search-grid">
+          <label>De onde você sai?<input type="text" id="origem" required maxlength="120" placeholder="Cidade ou aeroporto" autocomplete="off"></label>
+          <label>Para onde você vai?<input type="text" id="destino" required maxlength="120" placeholder="Qual é o seu destino?" autocomplete="off"></label>
+          <label>Data de ida<input type="date" id="ida" required></label>
+          <label>Data de volta<input type="date" id="volta" required></label>
+        </div>
+        <label class="check"><input type="checkbox" id="so_ida"> Quero apenas a ida</label>
+        <div class="details-grid">
+          <label>Seu nome<input type="text" id="nome" required maxlength="80" placeholder="Como podemos te chamar?" autocomplete="given-name"></label>
+          <label>Seu WhatsApp<input type="tel" id="whatsapp" required maxlength="30" placeholder="País + número com DDD" autocomplete="tel"></label>
+          <label>Adultos <span class="label-detail">12+</span><input type="number" id="adultos" min="1" max="9" value="1" required></label>
+          <label>Crianças <span class="label-detail">0–11</span><input type="number" id="criancas" min="0" max="8" value="0" required></label>
+        </div>
+        <div id="idades-criancas" class="children-ages"></div>
+        <p class="form-error hidden" id="form-feedback" role="alert"></p>
+        <div class="search-bottom"><p class="privacy-note"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Sem cadastro. Seus dados são usados para atender à sua cotação.</p><button type="submit" class="btn-primary" id="submit-button">Consultar tarifa <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+      </form>
+    </section>
 
-<footer>
-  <p><strong>Michel's Travel — Opção Eficiente</strong></p>
-  <p>📲 WhatsApp: (862) 350-1161 · ✉️ michelstravelus@gmail.com</p>
-  <p class="fine">Preços sujeitos a disponibilidade e confirmação no momento da reserva.</p>
-</footer>
+    <section class="card status-card hidden" id="status-card" aria-label="Acompanhamento da sua viagem">
+      <div id="status-loading">
+        <div class="waiting-top"><span class="eyebrow">SUA VIAGEM, COM CUIDADO EM CADA DETALHE</span><span class="search-state" id="search-state" role="status" aria-live="polite" aria-atomic="true"><span class="pulse-dot"></span><span id="search-state-label">Pedido na fila</span></span></div>
+        <div class="waiting-grid">
+          <div class="waiting-copy">
+            <h1 id="waiting-title" tabindex="-1">Enquanto buscamos,<br>comece a <em>imaginar.</em></h1>
+            <p id="search-state-message">Recebemos sua viagem. A cotação aparece aqui automaticamente quando estiver pronta.</p>
+            <div class="journey-ticket"><span class="eyebrow">A VIAGEM QUE VOCÊ ESTÁ PLANEJANDO</span><h2 id="journey-route"></h2><div class="journey-meta"><span id="journey-dates"></span><span class="meta-separator">/</span><span id="journey-travelers"></span></div></div>
+            <ol class="search-progress" aria-label="Etapas da cotação">
+              <li data-progress-step="1"><span class="step-number">1</span><span>Pedido<br>recebido</span></li>
+              <li data-progress-step="2"><span class="step-number">2</span><span>Consulta<br>das tarifas</span></li>
+              <li data-progress-step="3"><span class="step-number">3</span><span>Cotação<br>na tela</span></li>
+            </ol>
+            <div class="elapsed-row"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span>Tempo nesta consulta <strong id="elapsed-time" aria-live="off">00:00</strong></span></div>
+            <p class="waiting-footnote">Pode levar alguns minutos. Você pode explorar esta página enquanto aguarda.</p>
+          </div>
+          <aside class="waiting-postcard" aria-label="Inspiração de viagem">
+            <img src="assets/rio-hero.webp" alt="Paisagem ilustrativa do Rio de Janeiro ao entardecer" width="1776" height="888">
+            <div class="postcard-shade"></div><div class="postcard-copy"><span class="eyebrow">O MELHOR DA VIAGEM</span><p>Às vezes é um lugar.<br>Às vezes, <em>alguém.</em></p><span class="postcard-location"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Inspiração · Rio de Janeiro</span></div>
+          </aside>
+        </div>
+        <div class="long-wait hidden" id="long-wait" role="status"><div><strong>Algumas viagens pedem um pouco mais de tempo.</strong><p>A consulta continua ativa. A duração depende da fila e da disponibilidade da pesquisa. Se preferir, fale com a agência enquanto aguarda.</p></div><a href="https://wa.me/18623501161" target="_blank" rel="noopener">Falar no WhatsApp <span aria-hidden="true">↗</span></a></div>
+        <div class="wait-explore">
+          <div class="section-heading"><div><span class="eyebrow">ENQUANTO ISSO</span><h2>Já entre no clima da viagem.</h2></div><span class="editorial-note">Um pouco de inspiração. Um pouco de preparação.</span></div>
+          <div class="guide-grid">
+            <article class="destination-guide"><span class="destination-label"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg><span id="destination-name">Sua próxima viagem</span></span><h3 id="destination-title"></h3><p id="destination-copy"></p><p class="destination-prompt" id="destination-prompt"></p></article>
+            <section class="practical-guide" aria-label="Dicas para preparar sua viagem"><div class="guide-tabs" role="tablist" aria-label="Assuntos da viagem"><button type="button" role="tab" id="tab-bagagem" aria-selected="true" aria-controls="guide-panel" data-guide-tab="0" class="is-active"><svg class="icon" aria-hidden="true"><use href="#i-case"/></svg>Bagagem</button><button type="button" role="tab" id="tab-conexoes" aria-selected="false" aria-controls="guide-panel" tabindex="-1" data-guide-tab="1">Conexões</button><button type="button" role="tab" id="tab-preparar" aria-selected="false" aria-controls="guide-panel" tabindex="-1" data-guide-tab="2">Preparação</button></div><div class="guide-panel" id="guide-panel" role="tabpanel" aria-labelledby="tab-bagagem" tabindex="0"><h3 id="guide-tip-title"></h3><p id="guide-tip-text"></p><div class="tip-note"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><p id="guide-tip-extra"></p></div></div></section>
+          </div>
+        </div>
+      </div>
+      <div id="status-result" class="hidden" tabindex="-1"></div>
+    </section>
 
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
+    <section class="agency-section" id="nossa-agencia" aria-labelledby="agency-title">
+      <div class="section-heading"><div><span class="eyebrow">A GENTE VAI COM VOCÊ</span><h2 id="agency-title">Uma viagem boa começa com confiança.</h2></div><span class="editorial-note">Tecnologia para buscar. Gente para cuidar.</span></div>
+      <div class="benefit-grid">
+        <article class="benefit-card"><span class="icon-box"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></span><h3>Atendimento na sua língua.</h3><p>Converse em português, inglês ou espanhol e tire suas dúvidas com quem entende você.</p><span class="card-index">01</span></article>
+        <article class="benefit-card"><span class="icon-box"><svg class="icon" aria-hidden="true"><use href="#i-case"/></svg></span><h3>Clareza para escolher.</h3><p>Confira preço, bagagem e regras da cotação antes de dar o próximo passo com a agência.</p><span class="card-index">02</span></article>
+        <article class="benefit-card"><span class="icon-box"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></span><h3>Cuidado além da busca.</h3><p>Do planejamento às dúvidas da viagem, conte com um contato humano pelo WhatsApp.</p><span class="card-index">03</span></article>
+      </div>
+    </section>
+
+    <section class="inspiration-section" id="inspiracao" aria-labelledby="inspiration-title">
+      <div class="section-heading"><div><span class="eyebrow">QUAL É O SEU PRÓXIMO CAPÍTULO?</span><h2 id="inspiration-title">Cada viagem tem um porquê.</h2></div><a class="text-link" href="https://www.instagram.com/michelstravel/" target="_blank" rel="noopener">Acompanhe nossas histórias <span aria-hidden="true">↗</span></a></div>
+      <div class="inspiration-grid">
+        <article class="inspiration-photo"><img src="assets/rio-hero.webp" alt="Orla do Rio de Janeiro, uma inspiração para sua próxima viagem" width="1776" height="888" loading="lazy"><div><span class="eyebrow">PARA MATAR A SAUDADE</span><h3>O destino pode ser<br>um abraço.</h3><p>O melhor lugar do mundo também pode ser perto de quem você ama.</p></div></article>
+        <article class="inspiration-card discovery"><svg class="icon large-icon" aria-hidden="true"><use href="#i-globe"/></svg><span class="eyebrow">PARA DESCOBRIR</span><h3>Novos lugares.<br>Outras versões<br>de você.</h3><p>Uma paisagem diferente pode ser o começo de uma história que você ainda não imaginou.</p></article>
+        <article class="inspiration-card pause"><svg class="icon large-icon" aria-hidden="true"><use href="#i-plane"/></svg><span class="eyebrow">PARA RESPIRAR</span><h3>Tem viagem<br>que é uma<br>pausa.</h3><p>Um fim de semana, umas férias, um novo ritmo. Dê espaço para o seu próximo momento.</p></article>
+      </div>
+    </section>
+
+    <section class="contact-banner" aria-labelledby="contact-title"><div><span class="eyebrow">VAMOS TIRAR ESSA VIAGEM DO PAPEL?</span><h2 id="contact-title">Você escolhe o destino.<br>A gente ajuda com o caminho.</h2><p>Passagens aéreas · Cruzeiros · Pacotes · Roteiros personalizados</p></div><a class="btn-coral" href="https://wa.me/18623501161?text=Ol%C3%A1!%20Quero%20planejar%20uma%20viagem." target="_blank" rel="noopener">Fale com a Michel's Travel <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></section>
+  </main>
+
+  <footer><div class="footer-inner"><div><strong>Michel's Travel</strong><span>OPÇÃO EFICIENTE</span></div><div class="footer-links"><a href="https://wa.me/18623501161" target="_blank" rel="noopener">(862) 350-1161</a><a href="mailto:michelstravelus@gmail.com">michelstravelus@gmail.com</a><a href="https://www.instagram.com/michelstravel/" target="_blank" rel="noopener">@michelstravel</a></div></div><p class="footer-fine">Valores sujeitos a disponibilidade e confirmação na reserva. O envio da cotação não garante tarifa ou emissão da passagem.</p></footer>
+  <noscript><p class="noscript-note">Ative o JavaScript para buscar e acompanhar sua cotação ou fale com a agência pelo WhatsApp: <a href="https://wa.me/18623501161">(862) 350-1161</a>.</p></noscript>
+  <script src="config.js?v=4"></script>
+  <script src="experience.js?v=20261029"></script>
+  <script src="app.js?v=20261029"></script>
 </body>
 </html>
