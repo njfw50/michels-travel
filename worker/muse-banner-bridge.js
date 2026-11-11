@@ -105,7 +105,7 @@ async function generate(env, job) {
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
     if (path === "/health" && request.method === "GET") {
@@ -143,8 +143,10 @@ export default {
         status: "queued", created_at: new Date().toISOString(),
       };
       await writeJob(env, job);
-      ctx.waitUntil(generate(env, job));
-      return reply(publicJob(job), 202);
+      // Await the image API: waitUntil is limited and would risk killing long renders.
+      // Muse should set a suitable request timeout and can poll the GET endpoint.
+      await generate(env, job);
+      return reply(publicJob(job), job.status === "review" ? 201 : 502);
     }
 
     const match = path.match(/^\/api\/banner\/jobs\/([0-9a-f-]{36})(?:\/(image|approve|reject))?$/i);
