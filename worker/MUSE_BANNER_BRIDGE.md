@@ -40,7 +40,7 @@ Formatos aceitos: `portrait` (1088 × 1360), `square` (1024 × 1024), `story` (1
 
 ## Identidade visual da Michel's Travel
 
-O modelo gera apenas fotografia de fundo, **sem texto ou logo**. Isso é proposital: o Museu precisa adicionar **deterministicamente**, em uma etapa posterior de composição, o logotipo quadrado oficial intacto, as fontes, título, regras da promoção e CTA.
+O modelo gera apenas fotografia de fundo, **sem texto ou logo**. Isso é proposital: o Muse precisa adicionar **deterministicamente**, em uma etapa posterior de composição, o logotipo quadrado oficial intacto, as fontes, título, regras da promoção e CTA.
 
 Guia: azul `#3D4EAB`, coral `#FA5F52`, azul escuro `#005A8E`, branco. Visual foto full bleed, degradê escuro para textos brancos, kicker e CTA coral. O banner final 1080 × 1350 precisa ser exportado/redimensionado pelo compositor do Muse; 1088 × 1360 é apenas a resolução da imagem gerada.
 
