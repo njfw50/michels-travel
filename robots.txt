@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://njfw50.github.io/michels-travel/sitemap.xml
